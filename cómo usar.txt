@@ -1,0 +1,6 @@
+Poner EN LA MISMA CARPETA QUE EL PROGRAMA el archivo con el aumento de precios, con el nombre cambiado a "entrada", con la extensión ".xlsx".  Debería quedar así:
+
+entrada.xlsx
+
+Luego hacer doble clic en el archivo "mueble.exe" para ejecutarlo.
+
