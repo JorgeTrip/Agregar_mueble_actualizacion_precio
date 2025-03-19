@@ -72,20 +72,30 @@ function App() {
             width: '100%'
           }}
         >
-          <Typography 
-            variant="h4" 
-            component="h1" 
-            gutterBottom 
-            sx={{ 
-              mt: 4, 
-              mb: 4,
-              color: '#90caf9',
-              fontWeight: 'bold',
-              textAlign: 'center'
-            }}
-          >
-            Procesador de Precios con Muebles
-          </Typography>
+          <Box sx={{ textAlign: 'center', mb: 4, mt: 4 }}>
+            <Typography 
+              variant="h4" 
+              component="h1" 
+              gutterBottom 
+              sx={{ 
+                color: '#90caf9',
+                fontWeight: 'bold',
+              }}
+            >
+              Procesador de Precios con Muebles
+            </Typography>
+            <Typography 
+              variant="subtitle1" 
+              sx={{ 
+                color: '#f48fb1',
+                fontStyle: 'italic',
+                letterSpacing: '0.1em',
+                mt: 1
+              }}
+            >
+              By J.O.T.
+            </Typography>
+          </Box>
           <FileProcessor />
         </Container>
       </Box>
