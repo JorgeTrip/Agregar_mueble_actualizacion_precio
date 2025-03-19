@@ -75,7 +75,7 @@ const FileProcessor = () => {
   const [referenceData, setReferenceData] = useState(null);
   const [showUploadButtons, setShowUploadButtons] = useState(true);
   const [downloadAnchorEl, setDownloadAnchorEl] = useState(null);
-  const [sortDirection, setSortDirection] = useState('asc');
+  const [sortDirection, setSortDirection] = useState('desc');
   const [isDraggingReference, setIsDraggingReference] = useState(false);
   const [isDraggingInput, setIsDraggingInput] = useState(false);
 
@@ -85,11 +85,22 @@ const FileProcessor = () => {
     return String(code).trim().toUpperCase();
   };
 
+  const isValidFileType = (file) => {
+    const validExtensions = ['.xlsx', '.xls', '.ods'];
+    const fileName = file.name.toLowerCase();
+    return validExtensions.some(ext => fileName.endsWith(ext));
+  };
+
   const handleReferenceFileUpload = async (event) => {
     const file = event.target.files[0];
     if (!file) return;
 
     try {
+      if (!isValidFileType(file)) {
+        setError('Por favor, selecciona un archivo Excel o OpenOffice (.xlsx, .xls, .ods)');
+        return;
+      }
+
       const reader = new FileReader();
       reader.onload = async (e) => {
         try {
@@ -114,18 +125,18 @@ const FileProcessor = () => {
           setError(null);
         } catch (err) {
           console.error('Error al procesar el archivo de referencia:', err);
-          setError('Error al procesar el archivo de referencia. Verifica que el formato sea correcto.');
+          setError('Error al procesar el archivo. Verifica que el formato sea correcto y contenga las columnas necesarias.');
         }
       };
 
       reader.onerror = () => {
-        setError('Error al leer el archivo de referencia. Intenta nuevamente.');
+        setError('Error al leer el archivo. Intenta nuevamente.');
       };
 
       reader.readAsArrayBuffer(file);
     } catch (err) {
-      console.error('Error al procesar el archivo de referencia:', err);
-      setError('Error al procesar el archivo de referencia. Por favor, intenta nuevamente.');
+      console.error('Error al procesar el archivo:', err);
+      setError('Error al procesar el archivo. Por favor, intenta nuevamente.');
     }
   };
 
@@ -139,6 +150,11 @@ const FileProcessor = () => {
     }
 
     try {
+      if (!isValidFileType(file)) {
+        setError('Por favor, selecciona un archivo Excel o OpenOffice (.xlsx, .xls, .ods)');
+        return;
+      }
+
       const reader = new FileReader();
       reader.onload = async (e) => {
         try {
@@ -148,7 +164,7 @@ const FileProcessor = () => {
           const jsonData = XLSX.utils.sheet_to_json(worksheet);
 
           if (jsonData.length === 0) {
-            throw new Error('El archivo de entrada está vacío');
+            throw new Error('El archivo está vacío');
           }
 
           // Procesar datos y colocar mueble como primera columna
@@ -224,7 +240,7 @@ const FileProcessor = () => {
   const handleSort = () => {
     if (!data) return;
 
-    const newDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+    const newDirection = sortDirection === 'desc' ? 'asc' : 'desc';
     setSortDirection(newDirection);
 
     const sortedData = [...data].sort((a, b) => {
@@ -239,10 +255,10 @@ const FileProcessor = () => {
   };
 
   const handleReferenceFileDrop = useCallback((file) => {
-    if (file.type.includes('excel') || file.name.match(/\.(xls|xlsx)$/)) {
+    if (isValidFileType(file)) {
       handleReferenceFileUpload({ target: { files: [file] } });
     } else {
-      setError('Por favor, arrastra un archivo Excel (.xls o .xlsx)');
+      setError('Por favor, arrastra un archivo Excel o OpenOffice (.xlsx, .xls, .ods)');
     }
   }, []);
 
@@ -251,10 +267,10 @@ const FileProcessor = () => {
       setError('Por favor, carga primero el archivo de referencia de muebles.');
       return;
     }
-    if (file.type.includes('excel') || file.name.match(/\.(xls|xlsx)$/)) {
+    if (isValidFileType(file)) {
       handleInputFileUpload({ target: { files: [file] } });
     } else {
-      setError('Por favor, arrastra un archivo Excel (.xls o .xlsx)');
+      setError('Por favor, arrastra un archivo Excel o OpenOffice (.xlsx, .xls, .ods)');
     }
   }, [referenceData]);
 
@@ -364,7 +380,7 @@ const FileProcessor = () => {
                   '&:hover': { backgroundColor: '#29b6f6' }
                 }}
               >
-                {`Ordenar ${sortDirection === 'asc' ? '↑' : '↓'}`}
+                {`Ordenar ${sortDirection === 'desc' ? '↑' : '↓'}`}
               </Button>
             </Tooltip>
             <Tooltip title="Descargar archivo procesado" arrow>
