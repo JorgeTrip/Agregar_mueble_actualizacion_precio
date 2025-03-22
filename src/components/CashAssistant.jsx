@@ -22,23 +22,28 @@ import {
 function CashAssistant() {
   const [amounts, setAmounts] = useState([]);
   const [currentAmount, setCurrentAmount] = useState('');
-  const [cashFund, setCashFund] = useState(0);
+  const [cashFund, setCashFund] = useState('');
   const [includeCashFund, setIncludeCashFund] = useState(false);
   const [systemTotal, setSystemTotal] = useState(0);
   const [discrepancy, setDiscrepancy] = useState(0);
 
-  // Calcula la discrepancia automáticamente
+  const formatARS = (value) => {
+    return new Intl.NumberFormat('es-AR', {
+      style: 'decimal',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(value);
+  };
+
   useEffect(() => {
     setDiscrepancy(calculatePhysicalTotal() - systemTotal);
   }, [amounts, cashFund, includeCashFund, systemTotal]);
 
-  // Calcular total físico
   const calculatePhysicalTotal = () => {
     const total = amounts.reduce((sum, amount) => sum + Number(amount), 0);
-    return includeCashFund ? total - cashFund : total;
+    return includeCashFund ? total - (Number(cashFund) || 0) : total;
   };
 
-  // Manejar entrada de montos
   const handleAddAmount = (e) => {
     if (e.key === 'Enter' && currentAmount) {
       const amount = parseFloat(currentAmount);
@@ -49,49 +54,27 @@ function CashAssistant() {
     }
   };
 
-  // Calcular discrepancia
-  const calculateDiscrepancy = () => {
-    return calculatePhysicalTotal() - systemTotal;
-  };
-
   const handleClearAll = () => {
     setAmounts([]);
-    setCashFund(0);
+    setCashFund('');
     setSystemTotal(0);
     setIncludeCashFund(false);
   };
 
-  // Formateador de moneda argentina
-  const formatARS = (value) => {
-    return new Intl.NumberFormat('es-AR', {
-      style: 'decimal',
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    }).format(value);
-  };
-
-  const handleCashFundChange = (e) => {
-    const value = e.target.value;
-    // Permite solo números y punto decimal
-    if (value === '' || /^\d*\.?\d*$/.test(value)) {
-      setCashFund(value);
-    }
-  };
-
   return (
     <Box sx={{ p: 3 }}>
-      <Typography variant="h5" gutterBottom>
+      <Typography variant="h4" component="h1" gutterBottom sx={{ color: '#90caf9', fontWeight: 'bold', textAlign: 'center', mb: 4 }}>
         Asistente de Arqueo de Caja
+      </Typography>
+      <Typography variant="subtitle1" sx={{ color: '#f48fb1', fontStyle: 'italic', letterSpacing: '0.1em', textAlign: 'center', mb: 4 }}>
+        By J.O.T.
       </Typography>
 
       <Grid container spacing={3} sx={{ mb: 4 }}>
-        {/* Sección de entrada */}
         <Grid item xs={12} md={6}>
           <Typography variant="h6" gutterBottom>
             Recuento Físico
           </Typography>
-          
-          {/* New instructions */}
           <Typography variant="body2" sx={{ mb: 1, fontSize: '0.8rem', color: 'text.secondary' }}>
             Instrucciones: Ingrese cada monto individual y presione Enter para confirmar.
             <br/>
@@ -108,7 +91,7 @@ function CashAssistant() {
             InputProps={{ inputProps: { min: 0, step: 0.01 } }}
             sx={{ mb: 3 }}
           />
-          
+
           <List dense sx={{ maxHeight: 200, overflow: 'auto', border: '1px solid #555', borderRadius: 1 }}>
             {amounts.map((amount, index) => (
               <ListItem key={index}>
@@ -135,11 +118,7 @@ function CashAssistant() {
               label="Incluir fondo de caja"
             />
             
-            <Button 
-              variant="outlined" 
-              color="error"
-              onClick={handleClearAll}
-            >
+            <Button variant="outlined" color="error" onClick={handleClearAll}>
               Borrar Todo
             </Button>
           </Box>
@@ -150,7 +129,7 @@ function CashAssistant() {
               label="Fondo de caja"
               type="number"
               value={cashFund}
-              onChange={handleCashFundChange}
+              onChange={(e) => setCashFund(e.target.value)}
               InputProps={{
                 inputProps: { 
                   min: 0,
@@ -163,7 +142,6 @@ function CashAssistant() {
           )}
         </Grid>
 
-        {/* Sección de totales */}
         <Grid item xs={12} md={6}>
           <Typography variant="h6" gutterBottom>
             Totales
@@ -211,11 +189,14 @@ function CashAssistant() {
                 </TableRow>
                 <TableRow>
                   <TableCell>Diferencia</TableCell>
-                  <TableCell align="right" sx={{ 
-                    color: discrepancy === 0 ? 'inherit' : discrepancy > 0 ? 'green' : 'red',
-                    fontWeight: 'bold'
-                  }}>
-                    ${discrepancy.toFixed(2)}
+                  <TableCell 
+                    align="right"
+                    sx={{ 
+                      color: discrepancy === 0 ? 'inherit' : discrepancy > 0 ? 'green' : 'red',
+                      fontWeight: 'bold'
+                    }}
+                  >
+                    ${formatARS(discrepancy)}
                   </TableCell>
                 </TableRow>
               </TableBody>
@@ -223,14 +204,6 @@ function CashAssistant() {
           </TableContainer>
         </Grid>
       </Grid>
-
-      <Button 
-        variant="contained" 
-        color="primary"
-        onClick={() => setDiscrepancy(calculateDiscrepancy())}
-      >
-        Calcular Diferencia
-      </Button>
     </Box>
   );
 }
