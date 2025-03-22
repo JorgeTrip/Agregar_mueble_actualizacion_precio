@@ -15,18 +15,19 @@ function Sidebar({ onSelect }) {
         paddingTop: '20px',
       }}
     >
-      <Tooltip title="Procesador de lista de Precios con Muebles" arrow>
+      <Tooltip title="Planilla de Excel" arrow placement="right">
         <IconButton color="inherit" onClick={() => onSelect('home')}>
           <SpreadsheetIcon sx={{ fontSize: 40 }} />
         </IconButton>
       </Tooltip>
-      <Tooltip title="Asistente de Arqueo de Caja" arrow>
+      
+      <Tooltip title="Asistente de Arqueo de Caja" arrow placement="right">
         <IconButton color="inherit" onClick={() => onSelect('cashAssistant')}>
           <CashIcon sx={{ fontSize: 40 }} />
         </IconButton>
       </Tooltip>
-      {/* New Checklist Icon */}
-      <Tooltip title="Checklist de Cierre" arrow>
+      
+      <Tooltip title="Checklist de Cierre" arrow placement="right">
         <IconButton color="inherit" onClick={() => onSelect('checklist')}>
           <ChecklistIcon sx={{ fontSize: 40 }} />
         </IconButton>
