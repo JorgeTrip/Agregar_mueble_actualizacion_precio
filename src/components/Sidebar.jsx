@@ -1,6 +1,6 @@
 import React from 'react';
 import { Box, Tooltip, IconButton } from '@mui/material';
-import { Description as SpreadsheetIcon, AttachMoney as CashIcon } from '@mui/icons-material';
+import { Description as SpreadsheetIcon, AttachMoney as CashIcon, Checklist as ChecklistIcon } from '@mui/icons-material';
 
 function Sidebar({ onSelect }) {
   return (
@@ -23,6 +23,12 @@ function Sidebar({ onSelect }) {
       <Tooltip title="Asistente de Arqueo de Caja" arrow>
         <IconButton color="inherit" onClick={() => onSelect('cashAssistant')}>
           <CashIcon sx={{ fontSize: 40 }} />
+        </IconButton>
+      </Tooltip>
+      {/* New Checklist Icon */}
+      <Tooltip title="Checklist de Cierre" arrow>
+        <IconButton color="inherit" onClick={() => onSelect('checklist')}>
+          <ChecklistIcon sx={{ fontSize: 40 }} />
         </IconButton>
       </Tooltip>
     </Box>

@@ -3,6 +3,7 @@ import { Container, Typography, CssBaseline, ThemeProvider, createTheme, Box } f
 import FileProcessor from './components/FileProcessor';
 import Sidebar from './components/Sidebar';
 import CashAssistant from './components/CashAssistant';
+import ClosureChecklist from './components/ClosureChecklist';
 
 const theme = createTheme({
   palette: {
@@ -108,6 +109,7 @@ function App() {
               </Box>
             )}
             {selectedComponent === 'cashAssistant' && <CashAssistant />}
+            {selectedComponent === 'checklist' && <ClosureChecklist />}
           </Container>
         </Box>
       </Box>
