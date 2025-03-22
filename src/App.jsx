@@ -82,7 +82,7 @@ function App() {
                 fontWeight: 'bold',
               }}
             >
-              Procesador de Precios con Muebles
+              Procesador de lista de Precios con Muebles
             </Typography>
             <Typography 
               variant="subtitle1" 
