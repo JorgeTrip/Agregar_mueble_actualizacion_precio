@@ -1,25 +1,50 @@
 # Procesador de Precios con Muebles
 
-Aplicación web para procesar archivos Excel y agregar información de muebles a listas de precios.
+Aplicación web multifuncional para gestión farmacéutica que incluye:
 
-## Características
+1. Procesamiento de listas de precios con muebles
+2. Asistente de arqueo de caja
+3. Checklist de cierre diario
 
-- Carga de archivos Excel mediante drag & drop o selector de archivos
-- Procesamiento automático de datos
+## Características Principales
+
+### 🪑 Procesador de Precios
+- Carga de archivos Excel mediante drag & drop
+- Asignación automática de muebles mediante archivo de referencia
+- Validación de formatos (XLSX, XLS, ODS)
 - Ordenamiento por nombre de mueble
-- Exportación en múltiples formatos (XLSX, XLS, ODS)
-- Interfaz moderna y responsiva
+- Exportación de resultados en múltiples formatos
+- Interfaz intuitiva con feedback visual
+
+### 💰 Asistente de Arqueo de Caja
+- Registro de montos individuales con entrada rápida
+- Cálculo automático de total físico
+- Gestión de fondo de caja
+- Comparación con total del sistema
+- Detección de discrepancias con resaltado de colores
+- Formateo automático de montos en pesos argentinos
+
+### 📋 Checklist de Cierre
+- Lista predefinida de conceptos comunes
+- Adición de conceptos personalizados
+- Cálculo de total general automático
+- Generación de reportes en texto plano
+- Guardado automático con fecha en nombre de archivo
 
 ## Instalación
 
+Requisitos:
+- Node.js v18+
+- npm v9+
+
 ```bash
-# Clonar el repositorio
-git clone [URL_DEL_REPOSITORIO]
+# Clonar repositorio
+git clone https://github.com/JorgeTrip/Agregar_mueble_actualizacion_precio.git
 
 # Instalar dependencias
 npm install
 
-# Iniciar en modo desarrollo
+# Iniciar servidor de desarrollo
 npm run dev
 
 # Construir para producción
