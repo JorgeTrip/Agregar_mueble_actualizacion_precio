@@ -101,6 +101,7 @@ function App() {
                     fontStyle: 'italic',
                     letterSpacing: '0.1em',
                     mt: 1,
+                    mb: 4,
                   }}
                 >
                   By J.O.T.
