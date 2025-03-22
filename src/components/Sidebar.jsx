@@ -15,7 +15,7 @@ function Sidebar({ onSelect }) {
         paddingTop: '20px',
       }}
     >
-      <Tooltip title="Planilla de Excel" arrow>
+      <Tooltip title="Procesador de lista de Precios con Muebles" arrow>
         <IconButton color="inherit" onClick={() => onSelect('home')}>
           <SpreadsheetIcon sx={{ fontSize: 40 }} />
         </IconButton>
