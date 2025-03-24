@@ -6,6 +6,7 @@ import {
   Checklist as ChecklistIcon,
   Medication as MedicationIcon 
 } from '@mui/icons-material';
+import { Link } from 'react-router-dom';
 
 function Sidebar({ onSelect }) {
   return (
@@ -20,7 +21,7 @@ function Sidebar({ onSelect }) {
         paddingTop: '20px',
       }}
     >
-      <Tooltip title="Planilla de Excel" arrow placement="right">
+      <Tooltip title="Agregar mueble a planilla de precios" arrow placement="right">
         <IconButton color="inherit" onClick={() => onSelect('home')}>
           <SpreadsheetIcon sx={{ fontSize: 40 }} />
         </IconButton>
@@ -43,6 +44,12 @@ function Sidebar({ onSelect }) {
           <MedicationIcon sx={{ fontSize: 40 }} />
         </IconButton>
       </Tooltip>
+      <ListItem button component={Link} to="/add-furniture">
+        <ListItemIcon>
+          <AddCircleOutlineIcon />
+        </ListItemIcon>
+        <ListItemText primary="Agregar mueble a planilla de precios" />
+      </ListItem>
     </Box>
   );
 }
