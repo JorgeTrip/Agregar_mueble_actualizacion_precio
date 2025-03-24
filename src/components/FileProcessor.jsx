@@ -91,6 +91,16 @@ const FileProcessor = () => {
     return validExtensions.some(ext => fileName.endsWith(ext));
   };
 
+  // Move normalizeHeader to the top of the component with normalizeCode
+  const normalizeHeader = (header) => {
+    return String(header)
+      .trim()
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '');
+  };
+  
+  // In handleReferenceFileUpload, fix the processing logic:
   const handleReferenceFileUpload = async (event) => {
     const file = event.target.files[0];
     if (!file) return;
@@ -115,9 +125,29 @@ const FileProcessor = () => {
 
           // Normalizar códigos en los datos de referencia
           // Asumimos que el código está en la columna B y el mueble en la columna A
+          // Add this helper function at the top of the component
+          const normalizeHeader = (header) => {
+            return String(header)
+              .trim()
+              .toLowerCase()
+              .normalize('NFD')
+              .replace(/[\u0300-\u036f]/g, '');
+          };
+          
+          // In handleReferenceFileUpload, modify the processing logic:
+          const headers = jsonData[0];
+          let codigoKey = 'B', muebleKey = 'A';
+          
+          Object.keys(headers).forEach(key => {
+            const normalized = normalizeHeader(headers[key]);
+            if (normalized.includes('codigo ord 1')) codigoKey = key;
+            if (normalized.includes('mueble')) muebleKey = key;
+          });
+          
+          // Keep only one normalizedData declaration
           const normalizedData = jsonData.slice(1).map(row => ({
-            mueble: row.A,
-            codigo: normalizeCode(row.B)
+            mueble: row[muebleKey],
+            codigo: normalizeCode(row[codigoKey])
           }));
 
           console.log('Datos de referencia:', normalizedData);
@@ -483,4 +513,36 @@ const FileProcessor = () => {
   );
 };
 
-export default FileProcessor; 
+export default FileProcessor;
+
+// When processing the Excel rows:
+const processExcelData = (data) => {
+  // Get headers from first row
+  const headers = data[0];
+  
+  // Find column indexes dynamically
+  let codigoIndex = -1;
+  let muebleIndex = -1;
+
+  headers.forEach((header, index) => {
+    const normalizedHeader = header.trim().toLowerCase();
+    
+    if (normalizedHeader.includes('código ord 1')) {
+      codigoIndex = index;
+    }
+    if (normalizedHeader.includes('mueble')) {
+      muebleIndex = index;
+    }
+  });
+
+  // Validate required columns
+  if (codigoIndex === -1 || muebleIndex === -1) {
+    throw new Error('Columnas requeridas no encontradas en el archivo');
+  }
+
+  // Process remaining rows using found indexes
+  return data.slice(1).map((row) => ({
+    codigo: row[codigoIndex],
+    mueble: row[muebleIndex]
+  }));
+};
