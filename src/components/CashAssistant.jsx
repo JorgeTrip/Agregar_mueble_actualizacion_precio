@@ -175,8 +175,9 @@ function CashAssistant() {
                       fullWidth
                       label="Total sistema"
                       type="number"
-                      value={systemTotal}
+                      value={systemTotal || ''}
                       onChange={(e) => setSystemTotal(Number(e.target.value))}
+                      onFocus={(e) => e.target.value === '0' && setSystemTotal('')}
                       InputProps={{
                         inputProps: { 
                           min: 0,
