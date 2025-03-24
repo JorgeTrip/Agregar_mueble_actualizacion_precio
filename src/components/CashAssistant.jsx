@@ -170,7 +170,7 @@ function CashAssistant() {
                   <TableCell align="right">${formatARS(calculatePhysicalTotal())}</TableCell>
                 </TableRow>
                 <TableRow>
-                  <TableCell>
+                  <TableCell sx={{ width: '200px' }}>
                     <TextField
                       fullWidth
                       label="Total sistema"
@@ -186,7 +186,7 @@ function CashAssistant() {
                       }}
                     />
                   </TableCell>
-                  <TableCell align="right">${formatARS(systemTotal)}</TableCell>
+                  <TableCell align="right" sx={{ width: '150px' }}>${formatARS(systemTotal)}</TableCell>
                 </TableRow>
                 <TableRow>
                   <TableCell>Diferencia</TableCell>
