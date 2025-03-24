@@ -299,7 +299,7 @@ function DosageCalculator() {
                   </Typography>
                   <Box component="ul" sx={{ pl: 2 }}>
                     <Typography component="li" variant="body2">
-                      Usar jeringas graduadas según la dosis indicada por el médico
+                      Usar jeringa graduada según la dosis indicada por el médico
                     </Typography>
                     <Typography component="li" variant="body2">
                       Una vez abierto el frasco, mantener el antibiótico refrigerado durante el tratamiento
@@ -343,7 +343,7 @@ function DosageCalculator() {
                       Verificar la concentración en la etiqueta ({concentration === '2' ? '2% = 20 mg/ml' : '4% = 40 mg/ml'})
                     </Typography>
                     <Typography component="li" variant="body2">
-                      Usar jeringillas graduadas para medicamentos líquidos
+                      Usar jeringa graduada según la dosis indicada por el médico
                     </Typography>
                     <Typography component="li" variant="body2">
                       No superar: {medications[medication].name} {medications[medication].maxDailyPerKg} mg/kg/día
