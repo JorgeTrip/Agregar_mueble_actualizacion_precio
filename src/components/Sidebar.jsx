@@ -1,13 +1,12 @@
 import React from 'react';
-import { Box, Tooltip, IconButton, ListItem, ListItemIcon, ListItemText } from '@mui/material';
+import { Box, Tooltip, IconButton } from '@mui/material';
 import { 
   Description as SpreadsheetIcon, 
   AttachMoney as CashIcon, 
   Checklist as ChecklistIcon,
-  Medication as MedicationIcon,
-  AddCircleOutline as AddCircleOutlineIcon
+  Medication as MedicationIcon 
 } from '@mui/icons-material';
-// If you're not using routing yet, you can comment out this line
+// Remove the import for react-router-dom since we're not using it
 // import { Link } from 'react-router-dom';
 
 function Sidebar({ onSelect }) {
@@ -47,22 +46,7 @@ function Sidebar({ onSelect }) {
         </IconButton>
       </Tooltip>
       
-      {/* If you're not using routing yet, you can replace this with a regular button */}
-      {/* 
-      <ListItem button component={Link} to="/add-furniture">
-        <ListItemIcon>
-          <AddCircleOutlineIcon />
-        </ListItemIcon>
-        <ListItemText primary="Agregar mueble a planilla de precios" />
-      </ListItem>
-      */}
-      
-      {/* Alternative without routing */}
-      <Tooltip title="Agregar mueble" arrow placement="right">
-        <IconButton color="inherit" onClick={() => onSelect('addFurniture')}>
-          <AddCircleOutlineIcon sx={{ fontSize: 40 }} />
-        </IconButton>
-      </Tooltip>
+      {/* Remove the ListItem button that was here */}
     </Box>
   );
 }
