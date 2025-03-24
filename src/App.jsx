@@ -81,36 +81,48 @@ function App() {
               width: '100%',
             }}
           >
-            {selectedComponent === 'home' && (
-              <Box sx={{ textAlign: 'center', mb: 4, mt: 4 }}>
-                <Typography
-                  variant="h4"
-                  component="h1"
-                  gutterBottom
-                  sx={{
-                    color: '#90caf9',
-                    fontWeight: 'bold',
-                  }}
-                >
-                  Procesador de lista de Precios con Muebles
-                </Typography>
-                <Typography
-                  variant="subtitle1"
-                  sx={{
-                    color: '#f48fb1',
-                    fontStyle: 'italic',
-                    letterSpacing: '0.1em',
-                    mt: 1,
-                    mb: 4,
-                  }}
-                >
-                  By J.O.T.
-                </Typography>
-                <FileProcessor />
-              </Box>
-            )}
-            {selectedComponent === 'cashAssistant' && <CashAssistant />}
-            {selectedComponent === 'checklist' && <ClosureChecklist />}
+            {/* Home Component */}
+            <Box sx={{ 
+              display: selectedComponent === 'home' ? 'block' : 'none',
+              textAlign: 'center', 
+              mb: 4, 
+              mt: 4 
+            }}>
+              <Typography
+                variant="h4"
+                component="h1"
+                gutterBottom
+                sx={{
+                  color: '#90caf9',
+                  fontWeight: 'bold',
+                }}
+              >
+                Procesador de lista de Precios con Muebles
+              </Typography>
+              <Typography
+                variant="subtitle1"
+                sx={{
+                  color: '#f48fb1',
+                  fontStyle: 'italic',
+                  letterSpacing: '0.1em',
+                  mt: 1,
+                  mb: 4,
+                }}
+              >
+                By J.O.T.
+              </Typography>
+              <FileProcessor />
+            </Box>
+            
+            {/* Cash Assistant - Always mounted but hidden */}
+            <Box sx={{ display: selectedComponent === 'cashAssistant' ? 'block' : 'none', width: '100%' }}>
+              <CashAssistant />
+            </Box>
+            
+            {/* Checklist - Always mounted but hidden */}
+            <Box sx={{ display: selectedComponent === 'checklist' ? 'block' : 'none', width: '100%' }}>
+              <ClosureChecklist />
+            </Box>
           </Container>
         </Box>
       </Box>
