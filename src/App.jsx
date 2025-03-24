@@ -4,6 +4,7 @@ import FileProcessor from './components/FileProcessor';
 import Sidebar from './components/Sidebar';
 import CashAssistant from './components/CashAssistant';
 import ClosureChecklist from './components/ClosureChecklist';
+import DosageCalculator from './components/DosageCalculator';
 
 const theme = createTheme({
   palette: {
@@ -122,6 +123,11 @@ function App() {
             {/* Checklist - Always mounted but hidden */}
             <Box sx={{ display: selectedComponent === 'checklist' ? 'block' : 'none', width: '100%' }}>
               <ClosureChecklist />
+            </Box>
+            
+            {/* Dosage Calculator - Always mounted but hidden */}
+            <Box sx={{ display: selectedComponent === 'dosageCalculator' ? 'block' : 'none', width: '100%' }}>
+              <DosageCalculator />
             </Box>
           </Container>
         </Box>

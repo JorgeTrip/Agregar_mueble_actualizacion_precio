@@ -1,6 +1,11 @@
 import React from 'react';
 import { Box, Tooltip, IconButton } from '@mui/material';
-import { Description as SpreadsheetIcon, AttachMoney as CashIcon, Checklist as ChecklistIcon } from '@mui/icons-material';
+import { 
+  Description as SpreadsheetIcon, 
+  AttachMoney as CashIcon, 
+  Checklist as ChecklistIcon,
+  Medication as MedicationIcon 
+} from '@mui/icons-material';
 
 function Sidebar({ onSelect }) {
   return (
@@ -30,6 +35,12 @@ function Sidebar({ onSelect }) {
       <Tooltip title="Checklist de Cierre" arrow placement="right">
         <IconButton color="inherit" onClick={() => onSelect('checklist')}>
           <ChecklistIcon sx={{ fontSize: 40 }} />
+        </IconButton>
+      </Tooltip>
+      
+      <Tooltip title="Calculadora de Dosis Pediátricas" arrow placement="right">
+        <IconButton color="inherit" onClick={() => onSelect('dosageCalculator')}>
+          <MedicationIcon sx={{ fontSize: 40 }} />
         </IconButton>
       </Tooltip>
     </Box>
