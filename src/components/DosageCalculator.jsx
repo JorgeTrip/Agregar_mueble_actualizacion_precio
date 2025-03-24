@@ -28,6 +28,11 @@ function DosageCalculator() {
   const [frequency, setFrequency] = useState('8');
   const [duration, setDuration] = useState('7');
   const [requiredVolume, setRequiredVolume] = useState(null);
+  // New states for antibiotic concentration comparison
+  const [originalConcentration, setOriginalConcentration] = useState('500');
+  const [alternativeConcentration, setAlternativeConcentration] = useState('500');
+  const [alternativeDose, setAlternativeDose] = useState(null);
+  const [alternativeVolume, setAlternativeVolume] = useState(null);
 
   // Medication configurations
   const medications = {
@@ -51,8 +56,16 @@ function DosageCalculator() {
       ]
     },
     antibiotic: {
-      name: 'Antibiótico en jarabe',
-      isCustom: true
+      name: 'Antibiótico',
+      isCustom: true,
+      concentrations: [
+        { value: '125', label: '125 mg/5ml' },
+        { value: '250', label: '250 mg/5ml' },
+        { value: '400', label: '400 mg/5ml' },
+        { value: '500', label: '500 mg/5ml' },
+        { value: '750', label: '750 mg/5ml' },
+        { value: '1000', label: '1000 mg/5ml' }
+      ]
     }
   };
 
@@ -68,7 +81,7 @@ function DosageCalculator() {
       setDosage(null);
       setTotalDaily(null);
     }
-  }, [medication, concentration, weight, prescribedDose, frequency, duration]);
+  }, [medication, concentration, weight, prescribedDose, frequency, duration, originalConcentration, alternativeConcentration]);
 
   const calculateDosage = () => {
     const med = medications[medication];
@@ -87,21 +100,39 @@ function DosageCalculator() {
   const calculateAntibioticVolume = () => {
     if (!prescribedDose || !frequency || !duration) {
       setRequiredVolume(null);
+      setAlternativeDose(null);
+      setAlternativeVolume(null);
       return;
     }
 
     const dosePerTime = parseFloat(prescribedDose);
     const timesPerDay = 24 / parseFloat(frequency);
     const days = parseFloat(duration);
+    const origConc = parseFloat(originalConcentration);
+    const altConc = parseFloat(alternativeConcentration);
 
-    if (isNaN(dosePerTime) || isNaN(timesPerDay) || isNaN(days)) {
+    if (isNaN(dosePerTime) || isNaN(timesPerDay) || isNaN(days) || isNaN(origConc) || isNaN(altConc)) {
       setRequiredVolume(null);
+      setAlternativeDose(null);
+      setAlternativeVolume(null);
       return;
     }
 
-    // Calculate total volume needed for the entire treatment
+    // Calculate total volume needed for the entire treatment with original concentration
     const totalVolume = dosePerTime * timesPerDay * days;
     setRequiredVolume(totalVolume);
+
+    // Calculate mg per dose with original concentration
+    // For antibiotics, the concentration is typically expressed as mg per 5ml
+    const mgPerDose = (dosePerTime / 5) * origConc;
+    
+    // Calculate alternative dose to maintain the same mg per dose
+    const altDosePerTime = (mgPerDose * 5) / altConc;
+    setAlternativeDose(altDosePerTime);
+    
+    // Calculate alternative total volume
+    const altTotalVolume = altDosePerTime * timesPerDay * days;
+    setAlternativeVolume(altTotalVolume);
   };
 
   const formatDosage = (value) => {
@@ -167,7 +198,7 @@ function DosageCalculator() {
               >
                 <MenuItem value="ibuprofen">Ibuprofeno</MenuItem>
                 <MenuItem value="paracetamol">Paracetamol</MenuItem>
-                <MenuItem value="antibiotic">Antibiótico en jarabe</MenuItem>
+                <MenuItem value="antibiotic">Antibiótico</MenuItem>
               </Select>
             </FormControl>
             
@@ -209,6 +240,38 @@ function DosageCalculator() {
               </>
             ) : (
               <>
+                <FormControl fullWidth sx={{ mb: 2 }}>
+                  <InputLabel id="original-concentration-label">Concentración Original</InputLabel>
+                  <Select
+                    labelId="original-concentration-label"
+                    value={originalConcentration}
+                    label="Concentración Original"
+                    onChange={(e) => setOriginalConcentration(e.target.value)}
+                  >
+                    {medications.antibiotic.concentrations.map((conc) => (
+                      <MenuItem key={conc.value} value={conc.value}>
+                        {conc.label}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+                
+                <FormControl fullWidth sx={{ mb: 2 }}>
+                  <InputLabel id="alternative-concentration-label">Concentración Alternativa</InputLabel>
+                  <Select
+                    labelId="alternative-concentration-label"
+                    value={alternativeConcentration}
+                    label="Concentración Alternativa"
+                    onChange={(e) => setAlternativeConcentration(e.target.value)}
+                  >
+                    {medications.antibiotic.concentrations.map((conc) => (
+                      <MenuItem key={conc.value} value={conc.value}>
+                        {conc.label}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+                
                 <TextField
                   fullWidth
                   label="Dosis prescrita"
@@ -289,8 +352,29 @@ function DosageCalculator() {
                       </Typography>
                       <Divider sx={{ my: 1 }} />
                       <Typography variant="body1" sx={{ fontWeight: 'bold', mb: 1 }}>
-                        • Volumen total necesario: {formatDosage(requiredVolume)} ml
+                        • Concentración original ({originalConcentration} mg/5ml):
                       </Typography>
+                      <Typography variant="body1" sx={{ ml: 2, mb: 1 }}>
+                        - Dosis por toma: {prescribedDose} ml
+                      </Typography>
+                      <Typography variant="body1" sx={{ ml: 2, mb: 1 }}>
+                        - Volumen total necesario: {formatDosage(requiredVolume)} ml
+                      </Typography>
+                      
+                      {originalConcentration !== alternativeConcentration && (
+                        <>
+                          <Divider sx={{ my: 1 }} />
+                          <Typography variant="body1" sx={{ fontWeight: 'bold', mb: 1 }}>
+                            • Concentración alternativa ({alternativeConcentration} mg/5ml):
+                          </Typography>
+                          <Typography variant="body1" sx={{ ml: 2, mb: 1 }}>
+                            - Dosis por toma: {formatDosage(alternativeDose)} ml
+                          </Typography>
+                          <Typography variant="body1" sx={{ ml: 2, mb: 1 }}>
+                            - Volumen total necesario: {formatDosage(alternativeVolume)} ml
+                          </Typography>
+                        </>
+                      )}
                     </CardContent>
                   </Card>
 
@@ -310,6 +394,11 @@ function DosageCalculator() {
                     <Typography component="li" variant="body2">
                       Completar todo el tratamiento aunque los síntomas mejoren
                     </Typography>
+                    {originalConcentration !== alternativeConcentration && (
+                      <Typography component="li" variant="body2" sx={{ fontWeight: 'bold', color: '#f48fb1' }}>
+                        Al cambiar la concentración, asegúrese de ajustar la dosis a {formatDosage(alternativeDose)} ml para mantener la misma dosis total diaria!
+                      </Typography>
+                    )}
                   </Box>
                 </>
               ) : (
