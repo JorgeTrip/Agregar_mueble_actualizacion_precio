@@ -68,13 +68,14 @@ function ClosureChecklist() {
   };
 
   const handleSaveToFile = () => {
-    const date = new Date().toLocaleDateString('es-AR').replace(/\//g, '-');
+    const currentDate = new Date();
+    const formattedDate = currentDate.toISOString().split('T')[0]; // YYYY-MM-DD format
     const content = items.map(item => 
       `${item.name.padEnd(25)}: $${formatARS(item.amount || 0)}`
     ).join('\n') + `\n\nTOTAL GENERAL: $${formatARS(total)}`;
     
     const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-    saveAs(blob, `cierre-${date}.txt`);
+    saveAs(blob, `${formattedDate} Cierre de caja.txt`);
   };
 
   const handleKeyPress = (index, e) => {
