@@ -291,9 +291,6 @@ function DosageCalculator() {
                       <Typography variant="body1" sx={{ fontWeight: 'bold', mb: 1 }}>
                         • Volumen total necesario: {formatDosage(requiredVolume)} ml
                       </Typography>
-                      <Typography variant="body1" sx={{ fontWeight: 'bold' }}>
-                        • Tamaño de frasco recomendado: {getRecommendedBottleSize(requiredVolume)} ml
-                      </Typography>
                     </CardContent>
                   </Card>
 
@@ -302,13 +299,13 @@ function DosageCalculator() {
                   </Typography>
                   <Box component="ul" sx={{ pl: 2 }}>
                     <Typography component="li" variant="body2">
-                      Verificar la disponibilidad del tamaño de frasco recomendado
+                      Usar jeringas graduadas según la dosis indicada por el médico
                     </Typography>
                     <Typography component="li" variant="body2">
-                      Usar jeringillas graduadas para medicamentos líquidos
+                      Una vez abierto el frasco, mantener el antibiótico refrigerado durante el tratamiento
                     </Typography>
                     <Typography component="li" variant="body2">
-                      Mantener el antibiótico refrigerado si así lo indica el prospecto
+                      Agitar el frasco antes de administrar cada dosis
                     </Typography>
                     <Typography component="li" variant="body2">
                       Completar todo el tratamiento aunque los síntomas mejoren
