@@ -44,7 +44,8 @@ function DosageCalculator() {
       concentrations: [
         { value: '2', label: '2% (20 mg/ml)' },
         { value: '4', label: '4% (40 mg/ml)' }
-      ]
+      ],
+      source: 'Vademécum Pediátrico del Hospital Garrahan, 2023' // Add the source here
     },
     paracetamol: {
       name: 'Paracetamol',
@@ -53,7 +54,8 @@ function DosageCalculator() {
       frequency: '6 horas',
       concentrations: [
         { value: '2', label: '2% (20 mg/ml)' }
-      ]
+      ],
+      source: 'Vademécum Pediátrico del Hospital Garrahan, 2023'
     },
     antibiotic: {
       name: 'Antibiótico',
@@ -65,7 +67,8 @@ function DosageCalculator() {
         { value: '500', label: '500 mg/5ml' },
         { value: '750', label: '750 mg/5ml' },
         { value: '1000', label: '1000 mg/5ml' }
-      ]
+      ],
+      source: 'Guía de Dosificación de Antibióticos, Sociedad Argentina de Pediatría'
     }
   };
 
@@ -331,6 +334,11 @@ function DosageCalculator() {
                     ? 'Volumen total = Dosis por toma × (24 ÷ Frecuencia en horas) × Días'
                     : 'Dosis por toma = (Peso en kg × mg/kg/dosis) ÷ Concentración (mg/ml)'}
                 </Box>
+                {medications[medication].source && (
+                  <Typography variant="caption" sx={{ display: 'block', mt: 1, textAlign: 'right', fontStyle: 'italic', color: 'text.secondary' }}>
+                    Fuente: {medications[medication].source}
+                  </Typography>
+                )}
               </CardContent>
             </Card>
           </Paper>
