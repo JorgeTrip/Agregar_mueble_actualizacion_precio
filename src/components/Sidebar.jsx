@@ -5,6 +5,8 @@ import {
   AttachMoney as CashIcon, 
   Checklist as ChecklistIcon,
   Medication as MedicationIcon,
+  LocalPharmacy as PharmacyIcon,
+  MenuBook as VademecumIcon,
   DarkMode as DarkModeIcon,
   LightMode as LightModeIcon
 } from '@mui/icons-material';
@@ -58,6 +60,18 @@ function Sidebar({ onSelect, toggleTheme, themeMode }) {
       <Tooltip title="Calculadora de Dosis Pediátricas" arrow placement="right">
         <IconButton color="inherit" onClick={() => onSelect('dosageCalculator')}>
           <MedicationIcon sx={{ fontSize: 40 }} />
+        </IconButton>
+      </Tooltip>
+      
+      <Tooltip title="Precios de Medicamentos" arrow placement="right">
+        <IconButton color="inherit" onClick={() => onSelect('medicationPrices')}>
+          <PharmacyIcon sx={{ fontSize: 40 }} />
+        </IconButton>
+      </Tooltip>
+      
+      <Tooltip title="Vademecum de Argentina" arrow placement="right">
+        <IconButton color="inherit" onClick={() => onSelect('argentinaVademecum')}>
+          <VademecumIcon sx={{ fontSize: 40 }} />
         </IconButton>
       </Tooltip>
       

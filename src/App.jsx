@@ -5,6 +5,8 @@ import Sidebar from './components/Sidebar';
 import CashAssistant from './components/CashAssistant';
 import ClosureChecklist from './components/ClosureChecklist';
 import DosageCalculator from './components/DosageCalculator';
+import MedicationPrices from './components/MedicationPrices';
+import ArgentinaVademecum from './components/ArgentinaVademecum';
 
 // Componente principal de la aplicación que integra todas las herramientas para farmacia
 // Utiliza Material-UI para el diseño y gestiona la navegación entre componentes
@@ -157,6 +159,18 @@ function App() {
             {/* Siempre está montado pero solo se muestra cuando selectedComponent es 'dosageCalculator' */}
             <Box sx={{ display: selectedComponent === 'dosageCalculator' ? 'block' : 'none', width: '100%' }}>
               <DosageCalculator />
+            </Box>
+            
+            {/* Precios de Medicamentos - Componente para consultar precios de medicamentos */}
+            {/* Siempre está montado pero solo se muestra cuando selectedComponent es 'medicationPrices' */}
+            <Box sx={{ display: selectedComponent === 'medicationPrices' ? 'block' : 'none', width: '100%' }}>
+              <MedicationPrices />
+            </Box>
+            
+            {/* Vademecum de Argentina - Componente para consultar el vademecum de medicamentos */}
+            {/* Siempre está montado pero solo se muestra cuando selectedComponent es 'argentinaVademecum' */}
+            <Box sx={{ display: selectedComponent === 'argentinaVademecum' ? 'block' : 'none', width: '100%' }}>
+              <ArgentinaVademecum />
             </Box>
           </Container>
         </Box>
