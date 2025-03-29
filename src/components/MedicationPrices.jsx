@@ -24,7 +24,8 @@ function MedicationPrices() {
       <Paper elevation={3} sx={{ p: 2, mb: 4 }}>
         <Box 
           sx={{
-            width: '800px',
+            width: '810px',
+            maxWidth: '100%',
             margin: '0 auto',
             height: '80vh',
             overflow: 'hidden',
@@ -32,6 +33,10 @@ function MedicationPrices() {
               border: 'none',
               width: '100%',
               height: '100%',
+            },
+            '@media (max-width: 810px)': {
+              width: '100%',
+              overflowX: 'auto'
             }
           }}
         >
