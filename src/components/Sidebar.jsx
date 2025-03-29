@@ -6,9 +6,19 @@ import {
   Checklist as ChecklistIcon,
   Medication as MedicationIcon 
 } from '@mui/icons-material';
-// Remove the import for react-router-dom since we're not using it
-// import { Link } from 'react-router-dom';
 
+/**
+ * @fileoverview Componente de barra lateral para navegación entre herramientas
+ * @author J.O.T.
+ * @version 1.0.0
+ */
+
+/**
+ * @description Componente de barra lateral que permite la navegación entre las diferentes herramientas de la aplicación
+ * @param {Object} props - Propiedades del componente
+ * @param {Function} props.onSelect - Función que maneja el cambio entre componentes
+ * @returns {JSX.Element} Componente de barra lateral con iconos de navegación
+ */
 function Sidebar({ onSelect }) {
   return (
     <Box

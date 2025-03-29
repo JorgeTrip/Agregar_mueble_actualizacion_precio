@@ -1,3 +1,4 @@
+/* Estilos para el contenedor raíz de la aplicación */
 #root {
   max-width: 1280px;
   margin: 0 auto;
@@ -5,19 +6,23 @@
   text-align: center;
 }
 
+/* Estilos para el logotipo con efectos de transición */
 .logo {
   height: 6em;
   padding: 1.5em;
   will-change: filter;
   transition: filter 300ms;
 }
+/* Efecto de sombra al pasar el cursor sobre el logo */
 .logo:hover {
   filter: drop-shadow(0 0 2em #646cffaa);
 }
+/* Efecto de sombra específico para el logo de React */
 .logo.react:hover {
   filter: drop-shadow(0 0 2em #61dafbaa);
 }
 
+/* Animación de rotación para el logo */
 @keyframes logo-spin {
   from {
     transform: rotate(0deg);
@@ -27,16 +32,19 @@
   }
 }
 
+/* Aplicación de la animación solo si el usuario no tiene preferencia por reducir el movimiento */
 @media (prefers-reduced-motion: no-preference) {
   a:nth-of-type(2) .logo {
     animation: logo-spin infinite 20s linear;
   }
 }
 
+/* Estilos para las tarjetas de contenido */
 .card {
   padding: 2em;
 }
 
+/* Estilos para el texto de documentación con color gris */
 .read-the-docs {
   color: #888;
 }

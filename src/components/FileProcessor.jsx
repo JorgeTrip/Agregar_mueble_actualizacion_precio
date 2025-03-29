@@ -27,12 +27,35 @@ import {
 } from '@mui/icons-material';
 import * as XLSX from 'xlsx';
 
+/**
+ * @fileoverview Componente para procesar archivos Excel y asignar muebles a productos
+ * @author J.O.T.
+ * @version 1.0.0
+ */
+
+/**
+ * @description Componente que permite arrastrar y soltar archivos
+ * @param {Object} props - Propiedades del componente
+ * @param {Function} props.onDrop - Función que se ejecuta cuando se suelta un archivo
+ * @param {React.ReactNode} props.children - Contenido del componente
+ * @param {boolean} props.isDragActive - Indica si hay un archivo siendo arrastrado sobre el componente
+ * @param {boolean} props.disabled - Indica si el componente está deshabilitado
+ * @returns {JSX.Element} Componente de zona para arrastrar y soltar archivos
+ */
 const DropZone = ({ onDrop, children, isDragActive, disabled }) => {
+  /**
+   * @description Maneja el evento de arrastrar sobre el componente
+   * @param {React.DragEvent} e - Evento de arrastre
+   */
   const handleDragOver = (e) => {
     e.preventDefault();
     e.stopPropagation();
   };
 
+  /**
+   * @description Maneja el evento de soltar un archivo en el componente
+   * @param {React.DragEvent} e - Evento de soltar
+   */
   const handleDrop = (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -69,29 +92,54 @@ const DropZone = ({ onDrop, children, isDragActive, disabled }) => {
   );
 };
 
+/**
+ * @description Componente principal para procesar archivos Excel y asignar muebles a productos
+ * @returns {JSX.Element} Componente de procesamiento de archivos
+ */
 const FileProcessor = () => {
+  /** @type {[Array|null, Function]} Estado para almacenar los datos procesados */
   const [data, setData] = useState(null);
+  /** @type {[string|null, Function]} Estado para almacenar mensajes de error */
   const [error, setError] = useState(null);
+  /** @type {[Array|null, Function]} Estado para almacenar los datos de referencia de muebles */
   const [referenceData, setReferenceData] = useState(null);
+  /** @type {[boolean, Function]} Estado para controlar la visibilidad de los botones de carga */
   const [showUploadButtons, setShowUploadButtons] = useState(true);
+  /** @type {[HTMLElement|null, Function]} Estado para el menú de descarga */
   const [downloadAnchorEl, setDownloadAnchorEl] = useState(null);
+  /** @type {[string, Function]} Estado para la dirección de ordenamiento */
   const [sortDirection, setSortDirection] = useState('desc');
+  /** @type {[boolean, Function]} Estado para indicar si se está arrastrando un archivo de referencia */
   const [isDraggingReference, setIsDraggingReference] = useState(false);
+  /** @type {[boolean, Function]} Estado para indicar si se está arrastrando un archivo de entrada */
   const [isDraggingInput, setIsDraggingInput] = useState(false);
 
-  // Función para normalizar códigos
+  /**
+   * @description Normaliza los códigos de producto para facilitar la comparación
+   * @param {string|number} code - Código a normalizar
+   * @returns {string} Código normalizado
+   */
   const normalizeCode = (code) => {
     if (!code) return '';
     return String(code).trim().toUpperCase();
   };
 
+  /**
+   * @description Verifica si el tipo de archivo es válido para el procesamiento
+   * @param {File} file - Archivo a verificar
+   * @returns {boolean} Indica si el tipo de archivo es válido
+   */
   const isValidFileType = (file) => {
     const validExtensions = ['.xlsx', '.xls', '.ods'];
     const fileName = file.name.toLowerCase();
     return validExtensions.some(ext => fileName.endsWith(ext));
   };
 
-  // Move normalizeHeader to the top of the component with normalizeCode
+  /**
+   * @description Normaliza los encabezados de las columnas para facilitar la identificación
+   * @param {string} header - Encabezado a normalizar
+   * @returns {string} Encabezado normalizado
+   */
   const normalizeHeader = (header) => {
     return String(header)
       .trim()

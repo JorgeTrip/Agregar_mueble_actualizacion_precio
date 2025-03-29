@@ -1,3 +1,10 @@
+/**
+ * @fileoverview Componente para calcular dosis pediátricas de medicamentos
+ * Este componente permite calcular dosis de medicamentos comunes para niños
+ * basándose en su peso y la concentración del medicamento, así como calcular
+ * volúmenes necesarios para tratamientos con antibióticos.
+ * @author J.O.T.
+ */
 import React, { useState, useEffect } from 'react';
 import { 
   Box, 
@@ -16,25 +23,35 @@ import {
   InputAdornment
 } from '@mui/material';
 
+/**
+ * Componente principal para la calculadora de dosis pediátricas
+ * Permite calcular dosis de ibuprofeno, paracetamol y antibióticos
+ * @returns {JSX.Element} Componente de calculadora de dosis
+ */
 function DosageCalculator() {
+  // Estados para el tipo de medicamento y sus parámetros
   const [medication, setMedication] = useState('ibuprofen');
   const [concentration, setConcentration] = useState('2');
   const [weight, setWeight] = useState('');
   const [dosage, setDosage] = useState(null);
   const [totalDaily, setTotalDaily] = useState(null);
   const [error, setError] = useState('');
-  // New states for antibiotic syrup
+  // Estados para el cálculo de jarabe antibiótico
   const [prescribedDose, setPrescribedDose] = useState('5');
   const [frequency, setFrequency] = useState('8');
   const [duration, setDuration] = useState('7');
   const [requiredVolume, setRequiredVolume] = useState(null);
-  // New states for antibiotic concentration comparison
+  // Estados para la comparación de concentraciones de antibióticos
   const [originalConcentration, setOriginalConcentration] = useState('500');
   const [alternativeConcentration, setAlternativeConcentration] = useState('500');
   const [alternativeDose, setAlternativeDose] = useState(null);
   const [alternativeVolume, setAlternativeVolume] = useState(null);
 
-  // Medication configurations
+  /**
+   * Configuraciones de medicamentos con sus dosis recomendadas
+   * Incluye información sobre ibuprofeno, paracetamol y antibióticos
+   * con sus respectivas concentraciones y dosis por kg de peso
+   */
   const medications = {
     ibuprofen: {
       name: 'Ibuprofeno',
@@ -72,7 +89,10 @@ function DosageCalculator() {
     }
   };
 
-  // Calculate dosage when inputs change
+  /**
+   * Efecto para calcular la dosis cuando cambian los inputs
+   * Determina qué cálculo realizar según el tipo de medicamento seleccionado
+   */
   useEffect(() => {
     if (medication === 'antibiotic') {
       calculateAntibioticVolume();
@@ -86,6 +106,10 @@ function DosageCalculator() {
     }
   }, [medication, concentration, weight, prescribedDose, frequency, duration, originalConcentration, alternativeConcentration]);
 
+  /**
+   * Calcula la dosis de medicamento basada en el peso del niño
+   * Aplica para ibuprofeno y paracetamol
+   */
   const calculateDosage = () => {
     const med = medications[medication];
     const weightNum = parseFloat(weight);
@@ -100,6 +124,10 @@ function DosageCalculator() {
     setTotalDaily(dailyDose);
   };
 
+  /**
+   * Calcula el volumen total de antibiótico necesario para un tratamiento
+   * También calcula dosis alternativas si se cambia la concentración
+   */
   const calculateAntibioticVolume = () => {
     if (!prescribedDose || !frequency || !duration) {
       setRequiredVolume(null);
@@ -138,11 +166,20 @@ function DosageCalculator() {
     setAlternativeVolume(altTotalVolume);
   };
 
+  /**
+   * Formatea el valor de la dosis a dos decimales
+   * @param {number} value - Valor numérico a formatear
+   * @returns {string} Valor formateado con dos decimales
+   */
   const formatDosage = (value) => {
     if (value === null) return '';
     return value.toFixed(2);
   };
 
+  /**
+   * Obtiene el texto descriptivo de las dosis diarias
+   * @returns {string} Texto con la información de dosis por día
+   */
   const getDosesPerDay = () => {
     const med = medications[medication];
     if (medication === 'ibuprofen') {
@@ -153,6 +190,11 @@ function DosageCalculator() {
     return '';
   };
 
+  /**
+   * Determina el tamaño de frasco recomendado según el volumen necesario
+   * @param {number} volume - Volumen total necesario en ml
+   * @returns {string|number} Tamaño de frasco recomendado o texto con recomendación
+   */
   const getRecommendedBottleSize = (volume) => {
     // Common antibiotic bottle sizes in ml
     const commonSizes = [60, 90, 100, 120, 150, 200, 240];

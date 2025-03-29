@@ -14,6 +14,16 @@ import {
 import { saveAs } from 'file-saver';
 import { useRef, useEffect } from 'react';
 
+/**
+ * @fileoverview Componente para gestionar el checklist de cierre de caja de una farmacia
+ * @author J.O.T.
+ * @version 1.0.0
+ */
+
+/**
+ * @description Lista de conceptos predefinidos para el checklist de cierre
+ * @type {string[]}
+ */
 const predefinedItems = [
   'Deposito 1',
   'Deposito 2',
@@ -29,13 +39,25 @@ const predefinedItems = [
   'Extra Cash Mercado Pago'
 ];
 
+/**
+ * @description Componente principal que gestiona el checklist de cierre
+ * @returns {JSX.Element} Componente de checklist de cierre
+ */
 function ClosureChecklist() {
+  /** @type {[{name: string, amount: string}[], Function]} Estado para almacenar los items del checklist */
   const [items, setItems] = useState(
     predefinedItems.map(name => ({ name, amount: '' }))
   );
+  /** @type {[{name: string, amount: string}, Function]} Estado para el nuevo item que se está ingresando */
   const [newItem, setNewItem] = useState({ name: '', amount: '' });
+  /** @type {React.MutableRefObject<HTMLInputElement[]>} Referencias a los campos de entrada para navegación con teclado */
   const inputRefs = useRef([]);
 
+  /**
+   * @description Formatea un valor numérico a formato de moneda argentina
+   * @param {number} value - El valor a formatear
+   * @returns {string} El valor formateado como moneda argentina
+   */
   const formatARS = (value) => {
     return new Intl.NumberFormat('es-AR', {
       style: 'decimal',
@@ -44,6 +66,10 @@ function ClosureChecklist() {
     }).format(value);
   };
 
+  /**
+   * @description Maneja la adición de un nuevo item personalizado al checklist
+   * @param {React.KeyboardEvent} e - Evento de teclado
+   */
   const handleAddCustom = (e) => {
     if (e.key === 'Enter' && newItem.name && newItem.amount) {
       setItems(prev => [...prev, {
@@ -54,19 +80,34 @@ function ClosureChecklist() {
     }
   };
 
+  /**
+   * @description Actualiza el monto de un item específico en el checklist
+   * @param {number} index - Índice del item a actualizar
+   * @param {string} value - Nuevo valor para el monto
+   */
   const updateItemAmount = (index, value) => {
     const newItems = [...items];
     newItems[index].amount = value;
     setItems(newItems);
   };
 
+  /**
+   * @description Calcula el total de todos los montos ingresados
+   * @type {number}
+   */
   const total = items.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
 
+  /**
+   * @description Limpia todos los campos y reinicia el estado del componente
+   */
   const handleClearAll = () => {
     setItems(predefinedItems.map(name => ({ name, amount: '' })));
     setNewItem({ name: '', amount: '' });
   };
 
+  /**
+   * @description Guarda el checklist actual en un archivo de texto
+   */
   const handleSaveToFile = () => {
     const currentDate = new Date();
     const formattedDate = currentDate.toISOString().split('T')[0]; // YYYY-MM-DD format
@@ -78,6 +119,11 @@ function ClosureChecklist() {
     saveAs(blob, `${formattedDate} Cierre de caja.txt`);
   };
 
+  /**
+   * @description Maneja la navegación por teclado entre los campos de entrada
+   * @param {number} index - Índice del campo actual
+   * @param {React.KeyboardEvent} e - Evento de teclado
+   */
   const handleKeyPress = (index, e) => {
     if (e.key === 'Enter') {
       e.preventDefault();

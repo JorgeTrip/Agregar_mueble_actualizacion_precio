@@ -19,14 +19,36 @@ import {
   ListItemText
 } from '@mui/material';
 
+/**
+ * @fileoverview Componente para asistir en el arqueo de caja de una farmacia
+ * @author J.O.T.
+ * @version 1.0.0
+ */
+
+/**
+ * @description Componente principal que gestiona el arqueo de caja
+ * @returns {JSX.Element} Componente de asistente de arqueo de caja
+ */
 function CashAssistant() {
+  // Estados para gestionar los montos y cálculos
+  /** @type {[string[], Function]} Estado para almacenar la lista de montos ingresados */
   const [amounts, setAmounts] = useState([]);
+  /** @type {[string, Function]} Estado para el monto que se está ingresando actualmente */
   const [currentAmount, setCurrentAmount] = useState('');
+  /** @type {[string, Function]} Estado para el fondo de caja */
   const [cashFund, setCashFund] = useState('');
+  /** @type {[boolean, Function]} Estado para controlar si se incluye el fondo de caja en los cálculos */
   const [includeCashFund, setIncludeCashFund] = useState(false);
+  /** @type {[number, Function]} Estado para el total reportado por el sistema */
   const [systemTotal, setSystemTotal] = useState(0);
+  /** @type {[number, Function]} Estado para la diferencia entre el total físico y el del sistema */
   const [discrepancy, setDiscrepancy] = useState(0);
 
+  /**
+   * @description Formatea un valor numérico a formato de moneda argentina
+   * @param {number} value - El valor a formatear
+   * @returns {string} El valor formateado como moneda argentina
+   */
   const formatARS = (value) => {
     return new Intl.NumberFormat('es-AR', {
       style: 'decimal',
@@ -35,15 +57,26 @@ function CashAssistant() {
     }).format(value);
   };
 
+  /**
+   * @description Efecto que actualiza la discrepancia cuando cambian los valores relevantes
+   */
   useEffect(() => {
     setDiscrepancy(calculatePhysicalTotal() - systemTotal);
   }, [amounts, cashFund, includeCashFund, systemTotal]);
 
+  /**
+   * @description Calcula el total físico basado en los montos ingresados y el fondo de caja
+   * @returns {number} El total físico calculado
+   */
   const calculatePhysicalTotal = () => {
     const total = amounts.reduce((sum, amount) => sum + Number(amount), 0);
     return includeCashFund ? total - (Number(cashFund) || 0) : total;
   };
 
+  /**
+   * @description Maneja la adición de un nuevo monto a la lista
+   * @param {React.KeyboardEvent} e - Evento de teclado
+   */
   const handleAddAmount = (e) => {
     if (e.key === 'Enter' && currentAmount) {
       const amount = parseFloat(currentAmount);
@@ -54,6 +87,9 @@ function CashAssistant() {
     }
   };
 
+  /**
+   * @description Limpia todos los campos y reinicia el estado del componente
+   */
   const handleClearAll = () => {
     setAmounts([]);
     setCashFund('');

@@ -6,6 +6,11 @@ import CashAssistant from './components/CashAssistant';
 import ClosureChecklist from './components/ClosureChecklist';
 import DosageCalculator from './components/DosageCalculator';
 
+// Componente principal de la aplicación que integra todas las herramientas para farmacia
+// Utiliza Material-UI para el diseño y gestiona la navegación entre componentes
+
+// Configuración del tema oscuro personalizado para toda la aplicación
+// Define colores, estilos de componentes y otras propiedades visuales
 const theme = createTheme({
   palette: {
     mode: 'dark',
@@ -56,13 +61,19 @@ const theme = createTheme({
 });
 
 function App() {
+  // Estado para controlar qué componente se muestra actualmente en la interfaz
   const [selectedComponent, setSelectedComponent] = useState('home');
 
   return (
+    // Aplicación del tema personalizado a toda la aplicación
     <ThemeProvider theme={theme}>
+      {/* Normalización de estilos CSS para consistencia entre navegadores */}
       <CssBaseline />
+      {/* Contenedor principal con estructura flexible */}
       <Box sx={{ display: 'flex' }}>
+        {/* Barra lateral de navegación que recibe la función para cambiar de componente */}
         <Sidebar onSelect={setSelectedComponent} />
+        {/* Área principal de contenido */}
         <Box
           sx={{
             minHeight: '100vh',
@@ -73,6 +84,7 @@ function App() {
             flexGrow: 1,
           }}
         >
+          {/* Contenedor principal para todos los componentes */}
           <Container
             maxWidth="lg"
             sx={{
@@ -82,7 +94,8 @@ function App() {
               width: '100%',
             }}
           >
-            {/* Home Component */}
+            {/* Componente de inicio - Procesador de archivos */}
+            {/* Se muestra solo cuando selectedComponent es 'home' */}
             <Box sx={{ 
               display: selectedComponent === 'home' ? 'block' : 'none',
               textAlign: 'center', 
@@ -115,17 +128,20 @@ function App() {
               <FileProcessor />
             </Box>
             
-            {/* Cash Assistant - Always mounted but hidden */}
+            {/* Asistente de Caja - Componente para gestionar operaciones de caja */}
+            {/* Siempre está montado pero solo se muestra cuando selectedComponent es 'cashAssistant' */}
             <Box sx={{ display: selectedComponent === 'cashAssistant' ? 'block' : 'none', width: '100%' }}>
               <CashAssistant />
             </Box>
             
-            {/* Checklist - Always mounted but hidden */}
+            {/* Lista de Verificación de Cierre - Componente para gestionar tareas de cierre */}
+            {/* Siempre está montado pero solo se muestra cuando selectedComponent es 'checklist' */}
             <Box sx={{ display: selectedComponent === 'checklist' ? 'block' : 'none', width: '100%' }}>
               <ClosureChecklist />
             </Box>
             
-            {/* Dosage Calculator - Always mounted but hidden */}
+            {/* Calculadora de Dosificación - Componente para calcular dosis de medicamentos */}
+            {/* Siempre está montado pero solo se muestra cuando selectedComponent es 'dosageCalculator' */}
             <Box sx={{ display: selectedComponent === 'dosageCalculator' ? 'block' : 'none', width: '100%' }}>
               <DosageCalculator />
             </Box>
