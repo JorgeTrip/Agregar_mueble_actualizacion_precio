@@ -1,10 +1,12 @@
 import React from 'react';
-import { Box, Tooltip, IconButton } from '@mui/material';
+import { Box, Tooltip, IconButton, Switch } from '@mui/material';
 import { 
   Description as SpreadsheetIcon, 
   AttachMoney as CashIcon, 
   Checklist as ChecklistIcon,
-  Medication as MedicationIcon 
+  Medication as MedicationIcon,
+  DarkMode as DarkModeIcon,
+  LightMode as LightModeIcon
 } from '@mui/icons-material';
 
 /**
@@ -17,19 +19,22 @@ import {
  * @description Componente de barra lateral que permite la navegación entre las diferentes herramientas de la aplicación
  * @param {Object} props - Propiedades del componente
  * @param {Function} props.onSelect - Función que maneja el cambio entre componentes
+ * @param {Function} props.toggleTheme - Función para alternar entre tema oscuro y claro
+ * @param {string} props.themeMode - Modo actual del tema ('dark' o 'light')
  * @returns {JSX.Element} Componente de barra lateral con iconos de navegación
  */
-function Sidebar({ onSelect }) {
+function Sidebar({ onSelect, toggleTheme, themeMode }) {
   return (
     <Box
       sx={{
         width: '60px', // Sidebar angosto
         height: '100vh',
-        backgroundColor: '#333',
+        backgroundColor: themeMode === 'dark' ? '#333' : '#f0f0f0',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         paddingTop: '20px',
+        transition: 'background-color 0.3s ease',
       }}
     >
       <Tooltip title="Agregar mueble a planilla de precios" arrow placement="right">
@@ -56,7 +61,16 @@ function Sidebar({ onSelect }) {
         </IconButton>
       </Tooltip>
       
-      {/* Remove the ListItem button that was here */}
+      {/* Switch para alternar entre tema oscuro y claro */}
+      <Box sx={{ marginTop: 'auto', marginBottom: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <Tooltip title={themeMode === 'dark' ? "Cambiar a modo claro" : "Cambiar a modo oscuro"} arrow placement="right">
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <IconButton onClick={toggleTheme} color="inherit">
+              {themeMode === 'dark' ? <LightModeIcon sx={{ fontSize: 30 }} /> : <DarkModeIcon sx={{ fontSize: 30 }} />}
+            </IconButton>
+          </Box>
+        </Tooltip>
+      </Box>
     </Box>
   );
 }

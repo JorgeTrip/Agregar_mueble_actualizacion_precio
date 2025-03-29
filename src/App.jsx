@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Container, Typography, CssBaseline, ThemeProvider, createTheme, Box } from '@mui/material';
 import FileProcessor from './components/FileProcessor';
 import Sidebar from './components/Sidebar';
@@ -9,20 +9,19 @@ import DosageCalculator from './components/DosageCalculator';
 // Componente principal de la aplicación que integra todas las herramientas para farmacia
 // Utiliza Material-UI para el diseño y gestiona la navegación entre componentes
 
-// Configuración del tema oscuro personalizado para toda la aplicación
-// Define colores, estilos de componentes y otras propiedades visuales
-const theme = createTheme({
+// Función para crear el tema según el modo seleccionado (claro u oscuro)
+const createAppTheme = (mode) => createTheme({
   palette: {
-    mode: 'dark',
+    mode,
     primary: {
-      main: '#90caf9',
+      main: mode === 'dark' ? '#90caf9' : '#1976d2',
     },
     secondary: {
-      main: '#f48fb1',
+      main: mode === 'dark' ? '#f48fb1' : '#e91e63',
     },
     background: {
-      default: '#121212',
-      paper: '#1e1e1e',
+      default: mode === 'dark' ? '#121212' : '#f5f5f5',
+      paper: mode === 'dark' ? '#1e1e1e' : '#ffffff',
     },
   },
   components: {
@@ -30,21 +29,21 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           backgroundImage: 'none',
-          backgroundColor: '#1e1e1e',
+          backgroundColor: mode === 'dark' ? '#1e1e1e' : '#ffffff',
         },
       },
     },
     MuiTableCell: {
       styleOverrides: {
         root: {
-          borderColor: '#333',
+          borderColor: mode === 'dark' ? '#333' : '#e0e0e0',
         },
       },
     },
     MuiTableHead: {
       styleOverrides: {
         root: {
-          backgroundColor: '#2d2d2d',
+          backgroundColor: mode === 'dark' ? '#2d2d2d' : '#f5f5f5',
         },
       },
     },
@@ -63,6 +62,16 @@ const theme = createTheme({
 function App() {
   // Estado para controlar qué componente se muestra actualmente en la interfaz
   const [selectedComponent, setSelectedComponent] = useState('home');
+  // Estado para controlar el tema actual (oscuro o claro)
+  const [themeMode, setThemeMode] = useState('dark');
+  
+  // Crear el tema basado en el modo seleccionado
+  const theme = useMemo(() => createAppTheme(themeMode), [themeMode]);
+  
+  // Función para alternar entre temas
+  const toggleTheme = () => {
+    setThemeMode((prevMode) => (prevMode === 'dark' ? 'light' : 'dark'));
+  };
 
   return (
     // Aplicación del tema personalizado a toda la aplicación
@@ -71,8 +80,12 @@ function App() {
       <CssBaseline />
       {/* Contenedor principal con estructura flexible */}
       <Box sx={{ display: 'flex' }}>
-        {/* Barra lateral de navegación que recibe la función para cambiar de componente */}
-        <Sidebar onSelect={setSelectedComponent} />
+        {/* Barra lateral de navegación que recibe la función para cambiar de componente y controlar el tema */}
+        <Sidebar 
+          onSelect={setSelectedComponent} 
+          toggleTheme={toggleTheme} 
+          themeMode={themeMode} 
+        />
         {/* Área principal de contenido */}
         <Box
           sx={{
