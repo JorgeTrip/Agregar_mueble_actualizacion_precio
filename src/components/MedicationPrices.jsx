@@ -40,8 +40,8 @@ function MedicationPrices() {
               maxWidth: '810px' // Limita el ancho máximo en pantallas grandes
             },
             '@media (max-width: 600px)': {
-              width: '100%',
-              overflowX: 'auto'
+              width: '100%', // Ocupa todo el ancho en pantallas pequeñas
+              overflowX: 'auto' // Habilita el desplazamiento horizontal, si es necesario
             }
           }}
         >
