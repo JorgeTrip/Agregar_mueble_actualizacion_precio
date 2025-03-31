@@ -24,7 +24,7 @@ function MedicationPrices() {
       <Paper elevation={3} sx={{ p: 2, mb: 4 }}>
         <Box 
           sx={{
-            width: '810px',
+            width: '100%', // Cambiado de 810px a 100% para aprovechar todo el ancho disponible
             maxWidth: '100%',
             margin: '0 auto',
             height: '80vh',
@@ -34,7 +34,12 @@ function MedicationPrices() {
               width: '100%',
               height: '100%',
             },
-            '@media (max-width: 810px)': {
+            // Ajustes responsivos para diferentes tamaños de pantalla
+            '@media (min-width: 600px)': {
+              width: 'calc(100vw - 80px)', // Resta el ancho del sidebar vertical
+              maxWidth: '1200px' // Limita el ancho máximo en pantallas grandes
+            },
+            '@media (max-width: 600px)': {
               width: '100%',
               overflowX: 'auto'
             }

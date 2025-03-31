@@ -97,6 +97,8 @@ function App() {
             alignItems: 'center',
             backgroundColor: theme.palette.background.default,
             flexGrow: 1,
+            // Añadir margen superior en pantallas pequeñas para compensar la navbar fija
+            marginTop: { xs: '60px', sm: 0 },
           }}
         >
           {/* Contenedor principal para todos los componentes */}

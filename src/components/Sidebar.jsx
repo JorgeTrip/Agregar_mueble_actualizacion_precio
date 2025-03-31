@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Tooltip, IconButton, Switch } from '@mui/material';
+import { Box, Tooltip, IconButton, Switch, useMediaQuery, useTheme } from '@mui/material';
 import { 
   Description as SpreadsheetIcon, 
   AttachMoney as CashIcon, 
@@ -26,61 +26,74 @@ import {
  * @returns {JSX.Element} Componente de barra lateral con iconos de navegación
  */
 function Sidebar({ onSelect, toggleTheme, themeMode }) {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  
   return (
     <Box
       sx={{
-        width: '60px', // Sidebar angosto
-        height: '100vh',
+        width: isMobile ? '100%' : '60px', // Ancho completo en móvil, angosto en desktop
+        height: isMobile ? 'auto' : '100vh',
         backgroundColor: themeMode === 'dark' ? '#333' : '#f0f0f0',
         display: 'flex',
-        flexDirection: 'column',
+        flexDirection: isMobile ? 'row' : 'column',
+        justifyContent: isMobile ? 'space-around' : 'flex-start',
         alignItems: 'center',
-        paddingTop: '20px',
-        transition: 'background-color 0.3s ease',
+        padding: isMobile ? '10px 0' : '20px 0 0 0',
+        transition: 'all 0.3s ease',
+        position: isMobile ? 'fixed' : 'relative',
+        top: 0,
+        zIndex: 1100,
       }}
     >
-      <Tooltip title="Agregar mueble a planilla de precios" arrow placement="right">
+      <Tooltip title="Agregar mueble a planilla de precios" arrow placement={isMobile ? "bottom" : "right"}>
         <IconButton color="inherit" onClick={() => onSelect('home')}>
-          <SpreadsheetIcon sx={{ fontSize: 40 }} />
+          <SpreadsheetIcon sx={{ fontSize: isMobile ? 25 : 40 }} />
         </IconButton>
       </Tooltip>
       
-      <Tooltip title="Asistente de Arqueo de Caja" arrow placement="right">
+      <Tooltip title="Asistente de Arqueo de Caja" arrow placement={isMobile ? "bottom" : "right"}>
         <IconButton color="inherit" onClick={() => onSelect('cashAssistant')}>
-          <CashIcon sx={{ fontSize: 40 }} />
+          <CashIcon sx={{ fontSize: isMobile ? 25 : 40 }} />
         </IconButton>
       </Tooltip>
       
-      <Tooltip title="Checklist de Cierre" arrow placement="right">
+      <Tooltip title="Checklist de Cierre" arrow placement={isMobile ? "bottom" : "right"}>
         <IconButton color="inherit" onClick={() => onSelect('checklist')}>
-          <ChecklistIcon sx={{ fontSize: 40 }} />
+          <ChecklistIcon sx={{ fontSize: isMobile ? 25 : 40 }} />
         </IconButton>
       </Tooltip>
       
-      <Tooltip title="Calculadora de Dosis Pediátricas" arrow placement="right">
+      <Tooltip title="Calculadora de Dosis Pediátricas" arrow placement={isMobile ? "bottom" : "right"}>
         <IconButton color="inherit" onClick={() => onSelect('dosageCalculator')}>
-          <MedicationIcon sx={{ fontSize: 40 }} />
+          <MedicationIcon sx={{ fontSize: isMobile ? 25 : 40 }} />
         </IconButton>
       </Tooltip>
       
-      <Tooltip title="Precios de Medicamentos" arrow placement="right">
+      <Tooltip title="Precios de Medicamentos" arrow placement={isMobile ? "bottom" : "right"}>
         <IconButton color="inherit" onClick={() => onSelect('medicationPrices')}>
-          <PharmacyIcon sx={{ fontSize: 40 }} />
+          <PharmacyIcon sx={{ fontSize: isMobile ? 25 : 40 }} />
         </IconButton>
       </Tooltip>
       
-      <Tooltip title="Vademecum de Argentina" arrow placement="right">
+      <Tooltip title="Vademecum de Argentina" arrow placement={isMobile ? "bottom" : "right"}>
         <IconButton color="inherit" onClick={() => onSelect('argentinaVademecum')}>
-          <VademecumIcon sx={{ fontSize: 40 }} />
+          <VademecumIcon sx={{ fontSize: isMobile ? 25 : 40 }} />
         </IconButton>
       </Tooltip>
       
       {/* Switch para alternar entre tema oscuro y claro */}
-      <Box sx={{ marginTop: 'auto', marginBottom: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        <Tooltip title={themeMode === 'dark' ? "Cambiar a modo claro" : "Cambiar a modo oscuro"} arrow placement="right">
+      <Box sx={{
+        marginTop: isMobile ? 0 : 'auto',
+        marginBottom: isMobile ? 0 : '20px',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center'
+      }}>
+        <Tooltip title={themeMode === 'dark' ? "Cambiar a modo claro" : "Cambiar a modo oscuro"} arrow placement={isMobile ? "bottom" : "right"}>
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <IconButton onClick={toggleTheme} color="inherit">
-              {themeMode === 'dark' ? <LightModeIcon sx={{ fontSize: 30 }} /> : <DarkModeIcon sx={{ fontSize: 30 }} />}
+              {themeMode === 'dark' ? <LightModeIcon sx={{ fontSize: isMobile ? 25 : 30 }} /> : <DarkModeIcon sx={{ fontSize: isMobile ? 25 : 30 }} />}
             </IconButton>
           </Box>
         </Tooltip>
