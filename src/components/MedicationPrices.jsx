@@ -37,7 +37,7 @@ function MedicationPrices() {
             // Ajustes responsivos para diferentes tamaños de pantalla
             '@media (min-width: 600px)': {
               width: 'calc(100vw - 80px)', // Resta el ancho del sidebar vertical
-              maxWidth: '1200px' // Limita el ancho máximo en pantallas grandes
+              maxWidth: '810px' // Limita el ancho máximo en pantallas grandes
             },
             '@media (max-width: 600px)': {
               width: '100%',
