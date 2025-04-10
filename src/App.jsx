@@ -24,6 +24,8 @@ const createAppTheme = (mode) => createTheme({
     background: {
       default: mode === 'dark' ? '#121212' : '#f5f5f5',
       paper: mode === 'dark' ? '#1e1e1e' : '#ffffff',
+      appContainer: mode === 'dark' ? '#1a1a1a' : '#ffffff', // Fondo para el contenedor de la app
+      outsideApp: mode === 'dark' ? '#0a0a0a' : '#e0e0e0', // Fondo para el área fuera de la app
     },
   },
   components: {
@@ -80,16 +82,59 @@ function App() {
     <ThemeProvider theme={theme}>
       {/* Normalización de estilos CSS para consistencia entre navegadores */}
       <CssBaseline />
-      {/* Navbar superior fijo */}
-      <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
-        <Toolbar>
-          <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-            FarmaKit: Herramientas de farmacia
-          </Typography>
-        </Toolbar>
-      </AppBar>
-      {/* Contenedor principal con estructura flexible */}
-      <Box sx={{ display: 'flex', pt: '64px' }}> {/* Añadir padding-top para compensar el navbar fijo */}
+      {/* Fondo para toda la aplicación */}
+      <Box sx={{ 
+        backgroundColor: theme.palette.background.outsideApp,
+        minHeight: '100vh',
+        width: '100%',
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        zIndex: -1
+      }} />
+      {/* Contenedor principal que mantiene todo centrado */}
+      <Box sx={{ 
+        display: 'flex', 
+        flexDirection: 'column',
+        maxWidth: '1000px', 
+        margin: '0 auto', 
+        minHeight: '100vh',
+        position: 'relative',
+        zIndex: 1
+      }}>
+        {/* Navbar superior fijo */}
+        <AppBar position="fixed" sx={{ 
+          zIndex: (theme) => theme.zIndex.drawer + 1,
+          width: '100%',
+          maxWidth: '1000px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          '@media (min-width: 1000px)': {
+            left: 'auto',
+            transform: 'none',
+            right: 'auto'
+          }
+        }}>
+          <Toolbar>
+            <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
+              FarmaKit: Herramientas de farmacia
+            </Typography>
+          </Toolbar>
+        </AppBar>
+        {/* Contenedor principal con estructura flexible */}
+        <Box 
+          sx={{ 
+            display: 'flex', 
+            pt: '64px',
+            backgroundColor: theme.palette.background.appContainer, // Fondo distintivo para el área de la app
+            boxShadow: '0 0 10px rgba(0,0,0,0.2)', // Sombra sutil para distinguir del fondo
+            minHeight: '100vh', // Altura mínima para que ocupe toda la pantalla
+            width: '100%',
+            flexGrow: 1
+          }}
+        > {/* Añadir padding-top para compensar el navbar fijo */}
         {/* Barra lateral de navegación que recibe la función para cambiar de componente y controlar el tema */}
         <Sidebar 
           onSelect={setSelectedComponent} 
@@ -99,27 +144,31 @@ function App() {
         {/* Área principal de contenido */}
         <Box
           sx={{
-            minHeight: '100vh',
+            minHeight: 'calc(100vh - 64px)',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            backgroundColor: theme.palette.background.default,
+            backgroundColor: theme.palette.background.appContainer,
             flexGrow: 1,
             // Eliminar margen superior ya que se aplicó padding-top al contenedor padre
             marginTop: 0,
             marginLeft: { xs: 0, sm: '60px' }, // Margen izquierdo para compensar el sidebar en desktop
             paddingBottom: { xs: '60px', sm: 0 }, // Padding inferior para compensar el navbar móvil
-            width: '100%'
+            width: { xs: '100%', sm: 'calc(100% - 60px)' }, // Ancho ajustado para compensar el sidebar
+            position: 'relative'
           }}
         >
           {/* Contenedor principal para todos los componentes */}
           <Container
-            maxWidth="lg"
+            maxWidth={false}
             sx={{
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
               width: '100%',
+              padding: { xs: '0 16px', sm: '0 24px' },
+              boxSizing: 'border-box',
+              margin: '0 auto',
             }}
           >
             {/* Componente de inicio - Procesador de archivos */}
@@ -186,6 +235,7 @@ function App() {
               <ArgentinaVademecum />
             </Box>
           </Container>
+        </Box>
         </Box>
       </Box>
     </ThemeProvider>

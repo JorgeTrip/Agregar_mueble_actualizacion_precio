@@ -357,7 +357,7 @@ const FileProcessor = () => {
       sx={{ 
         p: 3, 
         width: '100%', 
-        maxWidth: 1200, 
+        maxWidth: '1000px', // Ajustado para coincidir con el ancho máximo de la navbar
         margin: '0 auto',
         backgroundColor: 'background.paper',
         borderRadius: 2,
