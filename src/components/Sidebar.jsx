@@ -50,37 +50,37 @@ function Sidebar({ onSelect, toggleTheme, themeMode }) {
       }}
     >
       <Tooltip title="Agregar mueble a planilla de precios" arrow placement={isMobile ? "bottom" : "right"}>
-        <IconButton color="inherit" onClick={() => onSelect('home')}>
+        <IconButton color="inherit" onClick={() => onSelect('home')} sx={{ my: isMobile ? 0 : 0.5 }}>
           <SpreadsheetIcon sx={{ fontSize: isMobile ? 25 : 40 }} />
         </IconButton>
       </Tooltip>
       
       <Tooltip title="Asistente de Arqueo de Caja" arrow placement={isMobile ? "bottom" : "right"}>
-        <IconButton color="inherit" onClick={() => onSelect('cashAssistant')}>
+        <IconButton color="inherit" onClick={() => onSelect('cashAssistant')} sx={{ my: isMobile ? 0 : 0.5 }}>
           <CashIcon sx={{ fontSize: isMobile ? 25 : 40 }} />
         </IconButton>
       </Tooltip>
       
       <Tooltip title="Checklist de Cierre" arrow placement={isMobile ? "bottom" : "right"}>
-        <IconButton color="inherit" onClick={() => onSelect('checklist')}>
+        <IconButton color="inherit" onClick={() => onSelect('checklist')} sx={{ my: isMobile ? 0 : 0.5 }}>
           <ChecklistIcon sx={{ fontSize: isMobile ? 25 : 40 }} />
         </IconButton>
       </Tooltip>
       
       <Tooltip title="Calculadora de Dosis Pediátricas" arrow placement={isMobile ? "bottom" : "right"}>
-        <IconButton color="inherit" onClick={() => onSelect('dosageCalculator')}>
+        <IconButton color="inherit" onClick={() => onSelect('dosageCalculator')} sx={{ my: isMobile ? 0 : 0.5 }}>
           <MedicationIcon sx={{ fontSize: isMobile ? 25 : 40 }} />
         </IconButton>
       </Tooltip>
       
       <Tooltip title="Precios de Medicamentos" arrow placement={isMobile ? "bottom" : "right"}>
-        <IconButton color="inherit" onClick={() => onSelect('medicationPrices')}>
+        <IconButton color="inherit" onClick={() => onSelect('medicationPrices')} sx={{ my: isMobile ? 0 : 0.5 }}>
           <PharmacyIcon sx={{ fontSize: isMobile ? 25 : 40 }} />
         </IconButton>
       </Tooltip>
       
       <Tooltip title="Vademecum de Argentina" arrow placement={isMobile ? "bottom" : "right"}>
-        <IconButton color="inherit" onClick={() => onSelect('argentinaVademecum')}>
+        <IconButton color="inherit" onClick={() => onSelect('argentinaVademecum')} sx={{ my: isMobile ? 0 : 0.5 }}>
           <VademecumIcon sx={{ fontSize: isMobile ? 25 : 40 }} />
         </IconButton>
       </Tooltip>
@@ -95,7 +95,7 @@ function Sidebar({ onSelect, toggleTheme, themeMode }) {
       }}>
         <Tooltip title={themeMode === 'dark' ? "Cambiar a modo claro" : "Cambiar a modo oscuro"} arrow placement={isMobile ? "bottom" : "right"}>
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <IconButton onClick={toggleTheme} color="inherit">
+            <IconButton onClick={toggleTheme} color="inherit" sx={{ my: isMobile ? 0 : 1 }}>
               {themeMode === 'dark' ? <LightModeIcon sx={{ fontSize: isMobile ? 25 : 30 }} /> : <DarkModeIcon sx={{ fontSize: isMobile ? 25 : 30 }} />}
             </IconButton>
           </Box>
