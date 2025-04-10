@@ -41,9 +41,12 @@ function Sidebar({ onSelect, toggleTheme, themeMode }) {
         alignItems: 'center',
         padding: isMobile ? '10px 0' : '20px 0 0 0',
         transition: 'all 0.3s ease',
-        position: isMobile ? 'fixed' : 'relative',
-        top: 0,
-        zIndex: 1100,
+        position: 'fixed',
+        top: isMobile ? 'auto' : '64px', // En desktop debajo del navbar, en móvil no aplica
+        bottom: isMobile ? 0 : 'auto', // En móvil, fijarlo al fondo
+        left: 0,
+        zIndex: 1000, // Mayor que el navbar superior para asegurar visibilidad
+        boxShadow: isMobile ? '0px -2px 4px rgba(0,0,0,0.1)' : 'none', // Sombra en modo móvil para destacar
       }}
     >
       <Tooltip title="Agregar mueble a planilla de precios" arrow placement={isMobile ? "bottom" : "right"}>

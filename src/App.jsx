@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Container, Typography, CssBaseline, ThemeProvider, createTheme, Box } from '@mui/material';
+import { Container, Typography, CssBaseline, ThemeProvider, createTheme, Box, AppBar, Toolbar } from '@mui/material';
 import FileProcessor from './components/FileProcessor';
 import Sidebar from './components/Sidebar';
 import CashAssistant from './components/CashAssistant';
@@ -80,8 +80,16 @@ function App() {
     <ThemeProvider theme={theme}>
       {/* Normalización de estilos CSS para consistencia entre navegadores */}
       <CssBaseline />
+      {/* Navbar superior fijo */}
+      <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
+        <Toolbar>
+          <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
+            FarmaKit: Herramientas de farmacia
+          </Typography>
+        </Toolbar>
+      </AppBar>
       {/* Contenedor principal con estructura flexible */}
-      <Box sx={{ display: 'flex' }}>
+      <Box sx={{ display: 'flex', pt: '64px' }}> {/* Añadir padding-top para compensar el navbar fijo */}
         {/* Barra lateral de navegación que recibe la función para cambiar de componente y controlar el tema */}
         <Sidebar 
           onSelect={setSelectedComponent} 
@@ -97,8 +105,11 @@ function App() {
             alignItems: 'center',
             backgroundColor: theme.palette.background.default,
             flexGrow: 1,
-            // Añadir margen superior en pantallas pequeñas para compensar la navbar fija
-            marginTop: { xs: '60px', sm: 0 },
+            // Eliminar margen superior ya que se aplicó padding-top al contenedor padre
+            marginTop: 0,
+            marginLeft: { xs: 0, sm: '60px' }, // Margen izquierdo para compensar el sidebar en desktop
+            paddingBottom: { xs: '60px', sm: 0 }, // Padding inferior para compensar el navbar móvil
+            width: '100%'
           }}
         >
           {/* Contenedor principal para todos los componentes */}
