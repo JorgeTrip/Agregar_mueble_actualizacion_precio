@@ -14,8 +14,8 @@ import { Box, Typography, Paper } from '@mui/material';
 function MedicationPrices() {
   return (
     <Box sx={{
-      p: 3, 
-      width: '910px', 
+      p: 3, // Padding interno 
+      width: '910px', // Ancho del contenedor
       boxSizing: 'border-box',
       overflowX: 'hidden'
     }}>
@@ -39,11 +39,6 @@ function MedicationPrices() {
               width: '100%',
               height: '100%',
             },
-            // Ajustes responsivos para diferentes tamaños de pantalla
-            '@media (max-width: 600px)': {
-              width: '100%', // Ocupa todo el ancho en pantallas pequeñas
-              overflowX: 'auto' // Habilita el desplazamiento horizontal, si es necesario
-            }
           }}
         >
           <iframe 

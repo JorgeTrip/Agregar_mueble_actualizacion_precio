@@ -102,7 +102,9 @@ function App() {
         margin: '0 auto', 
         minHeight: '100vh',
         position: 'relative',
-        zIndex: 1
+        zIndex: 1,
+        width: '100%', // Siempre ocupa el 100% del ancho disponible
+        overflowX: { xs: 'hidden', sm: 'hidden' } // Evita el desplazamiento horizontal en todos los tamaños
       }}>
         {/* Navbar superior fijo */}
         <AppBar 
@@ -236,11 +238,11 @@ function App() {
               flexDirection: 'column',
               alignItems: 'center',
               width: '100%',
-              minWidth: '1000px',
+              minWidth: { xs: '100%', sm: '1000px' }, // Ancho adaptable en móviles, fijo en desktop
               padding: { xs: '0 16px', sm: '0 24px' },
               boxSizing: 'border-box',
               margin: '0 auto',
-              overflow: 'hidden', // Evita que el contenido desborde
+              overflow: { xs: 'auto', sm: 'hidden' } // Permite scroll horizontal en móviles si es necesario
             }}
           >
             {/* Componente de inicio - Procesador de archivos */}
