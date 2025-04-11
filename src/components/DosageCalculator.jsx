@@ -222,7 +222,12 @@ function DosageCalculator() {
       p: 3, 
       width: '900px', 
       boxSizing: 'border-box',
-      overflowX: 'hidden'
+      overflowX: 'hidden',
+      // Agrego manejo de ancho en pantallas pequeñas:
+      '@media (max-width: 600px)': {
+        width: '100%',
+        p: 2
+      }
     }}>
       <Typography variant="h4" component="h1" gutterBottom sx={{ color: '#90caf9', fontWeight: 'bold', textAlign: 'center', mb: 2 }}>
         Calculadora de Dosis Pediátricas

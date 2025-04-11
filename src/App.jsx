@@ -250,7 +250,7 @@ function App() {
             <Box sx={{ 
               display: selectedComponent === 'home' ? 'block' : 'none',
               textAlign: 'center', 
-              marginLeft: '-60px', // Compenso el margen izquierdo del contenedor principal
+              marginLeft: { xs: '0px', sm: '-60px' }, // Compenso el margen izquierdo del contenedor principal
               mb: 4, 
               mt: 4 
             }}>
