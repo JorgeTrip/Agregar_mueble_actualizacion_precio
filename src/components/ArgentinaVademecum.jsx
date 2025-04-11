@@ -18,7 +18,7 @@ function ArgentinaVademecum() {
         Vademecum de Argentina
       </Typography>
       <Typography variant="subtitle1" sx={{ color: '#f48fb1', fontStyle: 'italic', letterSpacing: '0.1em', textAlign: 'center', mb: 4 }}>
-        By J.O.T.
+      
       </Typography>
       
       <Paper elevation={3} sx={{ p: 2, mb: 4 }}>

@@ -103,7 +103,7 @@ function CashAssistant() {
         Asistente de Arqueo de Caja
       </Typography>
       <Typography variant="subtitle1" sx={{ color: '#f48fb1', fontStyle: 'italic', letterSpacing: '0.1em', textAlign: 'center', mb: 4 }}>
-        By J.O.T.
+      
       </Typography>
 
       <Grid container spacing={3} sx={{ mb: 4 }}>

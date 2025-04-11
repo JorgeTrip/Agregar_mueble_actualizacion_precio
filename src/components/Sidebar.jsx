@@ -33,13 +33,14 @@ function Sidebar({ onSelect, toggleTheme, themeMode }) {
     <Box
       sx={{
         width: isMobile ? '100%' : '60px', // Ancho completo en móvil, angosto en desktop
-        height: isMobile ? 'auto' : '100vh',
+        height: isMobile ? 'auto' : 'calc(100vh - 64px)', // Restar la altura del navbar (64px)
+        maxHeight: isMobile ? 'auto' : 'calc(100vh - 64px)', // Limitar altura máxima
         backgroundColor: themeMode === 'dark' ? '#333' : '#f0f0f0',
         display: 'flex',
         flexDirection: isMobile ? 'row' : 'column',
         justifyContent: isMobile ? 'space-around' : 'flex-start',
         alignItems: 'center',
-        padding: isMobile ? '10px 0' : '20px 0 0 0',
+        padding: isMobile ? '10px 0' : '20px 0 10px 0', // Añadir padding inferior para dar espacio
         transition: 'all 0.3s ease',
         position: 'fixed',
         top: isMobile ? 'auto' : '64px', // En desktop debajo del navbar, en móvil no aplica
@@ -47,6 +48,16 @@ function Sidebar({ onSelect, toggleTheme, themeMode }) {
         left: 0,
         zIndex: 1000, // Mayor que el navbar superior para asegurar visibilidad
         boxShadow: isMobile ? '0px -2px 4px rgba(0,0,0,0.1)' : 'none', // Sombra en modo móvil para destacar
+        overflowY: 'auto', // Permitir scroll si hay muchos elementos
+        overflowX: 'hidden',
+        scrollbarWidth: 'thin', // Scrollbar delgado para Firefox
+        '&::-webkit-scrollbar': { // Personalizar scrollbar para Chrome
+          width: '4px',
+        },
+        '&::-webkit-scrollbar-thumb': {
+          backgroundColor: themeMode === 'dark' ? '#555' : '#bbb',
+          borderRadius: '4px',
+        }
       }}
     >
       <Tooltip title="Agregar mueble a planilla de precios" arrow placement={isMobile ? "bottom" : "right"}>
