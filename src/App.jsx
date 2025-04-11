@@ -216,11 +216,11 @@ function App() {
         <Box
           sx={{
             minHeight: 'calc(100vh - 64px)',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            backgroundColor: theme.palette.background.appContainer,
-            flexGrow: 1,
+            display: 'flex', // con flex, el contenedor ocupa todo el ancho disponible
+            flexDirection: 'column', // con column, los elementos se apilan verticalmente
+            alignItems: 'center', // con center, los elementos se centran horizontalmente
+            backgroundColor: theme.palette.background.appContainer, // Fondo distintivo para el área de la app
+            flexGrow: 1, // el contenedor ocupa todo el ancho disponible
             marginTop: 0, // Eliminar margen superior ya que se aplicó padding-top al contenedor padre
             marginLeft: { xs: 0, sm: '60px' }, // Margen izquierdo para compensar el sidebar en desktop
             paddingBottom: { xs: '60px', sm: 0 }, // Padding inferior para compensar el navbar móvil
@@ -236,9 +236,11 @@ function App() {
               flexDirection: 'column',
               alignItems: 'center',
               width: '100%',
+              minWidth: '1000px',
               padding: { xs: '0 16px', sm: '0 24px' },
               boxSizing: 'border-box',
               margin: '0 auto',
+              overflow: 'hidden', // Evita que el contenido desborde
             }}
           >
             {/* Componente de inicio - Procesador de archivos */}

@@ -218,7 +218,12 @@ function DosageCalculator() {
   };
 
   return (
-    <Box sx={{ p: 3 }}>
+    <Box sx={{
+      p: 3, 
+      width: '900px', 
+      boxSizing: 'border-box',
+      overflowX: 'hidden'
+    }}>
       <Typography variant="h4" component="h1" gutterBottom sx={{ color: '#90caf9', fontWeight: 'bold', textAlign: 'center', mb: 2 }}>
         Calculadora de Dosis Pediátricas
       </Typography>

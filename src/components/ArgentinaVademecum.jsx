@@ -13,7 +13,12 @@ import { Box, Typography, Paper } from '@mui/material';
  */
 function ArgentinaVademecum() {
   return (
-    <Box sx={{ p: 3 }}>
+    <Box sx={{
+      p: 3, 
+      width: '910px', 
+      boxSizing: 'border-box',
+      overflowX: 'hidden'
+    }}>
       <Typography variant="h4" component="h1" gutterBottom sx={{ color: '#90caf9', fontWeight: 'bold', textAlign: 'center', mb: 2 }}>
         Vademecum de Argentina
       </Typography>
@@ -35,10 +40,6 @@ function ArgentinaVademecum() {
               height: '100%',
             },
             // Ajustes responsivos para diferentes tamaños de pantalla
-            '@media (min-width: 600px)': {
-              width: 'calc(100vw - 80px)', // Resta el ancho del sidebar vertical
-              maxWidth: '810px' // Limita el ancho máximo en pantallas grandes
-            },
             '@media (max-width: 600px)': {
               width: '100%', // Ocupa todo el ancho en pantallas pequeñas
               overflowX: 'auto' // Permite desplazamiento horizontal si es necesario
