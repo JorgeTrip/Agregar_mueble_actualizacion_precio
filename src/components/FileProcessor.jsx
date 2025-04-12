@@ -662,7 +662,8 @@ const handleReferenceFileUpload = async (event) => {
         <TableContainer 
           component={Paper} 
           sx={{ 
-            maxHeight: 440,
+            maxHeight: 404,
+            maxWidth: '900px',
             mt: 2,
             '& .MuiPaper-root': {
               boxShadow: 'none'
