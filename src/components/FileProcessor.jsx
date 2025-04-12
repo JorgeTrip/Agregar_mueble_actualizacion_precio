@@ -120,6 +120,10 @@ const FileProcessor = () => {
   const [isDownloadingReference, setIsDownloadingReference] = useState(false);
   /** @type {[string|null, Function]} Estado para almacenar mensajes de información */
   const [info, setInfo] = useState(null);
+  /** @type {[boolean, Function]} Estado para indicar si el archivo de referencia ha sido descargado exitosamente */
+  const [referenceDownloaded, setReferenceDownloaded] = useState(false);
+  /** @type {[boolean, Function]} Estado para indicar si se ha mostrado el mensaje de ubicación del archivo */
+  const [showLocationMessage, setShowLocationMessage] = useState(false);
 
   /**
    * @description Normaliza los códigos de producto para facilitar la comparación
@@ -202,6 +206,8 @@ const handleDownloadReference = async () => {
     console.log('Datos de referencia descargados:', normalizedData);
     setReferenceData(normalizedData);
     setInfo('Archivo de referencia descargado y procesado correctamente');
+    // Marcar que el archivo de referencia ha sido descargado exitosamente
+    setReferenceDownloaded(true);
     
     // Guardar una copia local del archivo
     saveAs(
@@ -216,6 +222,7 @@ const handleDownloadReference = async () => {
   } catch (err) {
     console.error('Error al descargar el archivo de referencia:', err);
     setError(`Error al descargar el archivo de referencia: ${err.message}`);
+    setReferenceDownloaded(false);
   } finally {
     setIsDownloadingReference(false);
   }
@@ -384,7 +391,12 @@ const handleReferenceFileUpload = async (event) => {
     setData(null);
     setReferenceData(null);
     setError(null);
+    setInfo(null);
     setShowUploadButtons(true);
+    setReferenceDownloaded(false);
+    setIsDraggingReference(false);
+    setIsDraggingInput(false);
+    setShowLocationMessage(false);
   };
 
   const handleSort = () => {
@@ -442,7 +454,7 @@ const handleReferenceFileUpload = async (event) => {
             <Typography variant="h6" gutterBottom sx={{ color: '#90caf9', textAlign: 'center' }}>
               Pasos para procesar el archivo:
             </Typography>
-            <Typography variant="body1" component="ol" sx={{ pl: 2, mb: 4 }}>
+            <Typography variant="body1" component="ol" align= "left" sx={{ pl: 2, mb: 4 }}>
               <li>Carga el archivo de referencia de muebles (.xls o .xlsx)</li>
               <li>Carga el archivo de precios a procesar (.xls o .xlsx)</li>
               <li>Descarga el archivo resultante con la columna de muebles agregada</li>
@@ -455,8 +467,11 @@ const handleReferenceFileUpload = async (event) => {
               <Button
                 variant="outlined"
                 color="primary"
-                onClick={handleDownloadReference}
-                disabled={isDownloadingReference}
+                onClick={() => {
+                  handleDownloadReference();
+                  setShowLocationMessage(true);
+                }}
+                disabled={isDownloadingReference || referenceDownloaded}
                 startIcon={isDownloadingReference ? <CircularProgress size={20} color="inherit" /> : <CloudDownloadIcon />}
                 sx={{ 
                   width: '100%',
@@ -468,19 +483,28 @@ const handleReferenceFileUpload = async (event) => {
                   }
                 }}
               >
-                {isDownloadingReference ? 'Descargando...' : 'Descargar archivo de referencia'}
+                {isDownloadingReference ? 'Descargando...' : referenceDownloaded ? 'Archivo descargado' : 'Descargar archivo de referencia'}
               </Button>
+              
+              {/* Mensaje informativo sobre la ubicación del archivo o el estado del proceso */}
+              <Typography variant="caption" sx={{ display: 'block', mt: 1, color: '#f48fb1', textAlign: 'center' }}>
+                {referenceDownloaded 
+                  ? 'El archivo fue descargado y procesado correctamente' 
+                  : showLocationMessage 
+                    ? 'El archivo se guardará en tu carpeta de Descargas' 
+                    : ''}
+              </Typography>
             </Box>
             
             <Stack spacing={3} direction="column" sx={{ width: '100%', maxWidth: 600, alignItems: 'stretch' }}>
               <DropZone
                 onDrop={handleReferenceFileDrop}
                 isDragActive={isDraggingReference}
-                disabled={false}
+                disabled={referenceDownloaded}
               >
                 <Stack spacing={2} alignItems="center">
                   <Typography variant="body1" sx={{ color: 'text.secondary', textAlign: 'center', mb: 1 }}>
-                    Arrastra aquí el archivo de referencia de muebles o
+                    {referenceDownloaded ? 'Archivo de referencia ya cargado ✓' : 'Arrastra aquí el archivo de referencia de muebles o'}
                   </Typography>
                   <Tooltip title="Selecciona el archivo que contiene la referencia de muebles" arrow>
                     <Button
@@ -488,18 +512,28 @@ const handleReferenceFileUpload = async (event) => {
                       component="label"
                       startIcon={<FileUploadIcon />}
                       color="primary"
+                      disabled={referenceDownloaded}
                       sx={{ 
                         backgroundColor: '#90caf9',
                         '&:hover': { backgroundColor: '#64b5f6' },
                         py: 2
                       }}
                     >
-                      Paso 1: Seleccionar archivo de referencia
+                      {referenceDownloaded ? 'Archivo de referencia cargado ✓' : 'Paso 1: Seleccionar archivo de referencia'}
                       <input
                         type="file"
                         hidden
                         accept=".xlsx,.xls"
                         onChange={handleReferenceFileUpload}
+                        // Mostrar mensaje informativo al hacer clic
+                        onClick={() => {
+                          // Mostrar un mensaje informativo más detallado sobre la ubicación del archivo
+                          setInfo('Busca el archivo en tu carpeta de Descargas. El sistema operativo abrirá el explorador de archivos, pero deberás navegar manualmente a la carpeta de Descargas donde encontrarás el archivo de referencia si lo has descargado anteriormente.');
+                          // Limpiar el mensaje después de 10 segundos para dar tiempo suficiente para leerlo
+                          setTimeout(() => {
+                            setInfo(null);
+                          }, 10000);
+                        }}
                       />
                     </Button>
                   </Tooltip>
@@ -513,7 +547,7 @@ const handleReferenceFileUpload = async (event) => {
               >
                 <Stack spacing={2} alignItems="center">
                   <Typography variant="body1" sx={{ color: 'text.secondary', textAlign: 'center', mb: 1 }}>
-                    Arrastra aquí el archivo de precios o
+                    {referenceData ? '✓ Ahora arrastra aquí el archivo de precios o' : 'Arrastra aquí el archivo de precios o'}
                   </Typography>
                   <Tooltip title="Selecciona el archivo de precios que deseas procesar" arrow>
                     <Button
@@ -528,7 +562,7 @@ const handleReferenceFileUpload = async (event) => {
                         py: 2
                       }}
                     >
-                      Paso 2: Seleccionar archivo de precios
+                      {referenceData ? 'Paso 2: Seleccionar archivo de precios ➤' : 'Paso 2: Seleccionar archivo de precios'}
                       <input
                         type="file"
                         hidden
@@ -608,6 +642,20 @@ const handleReferenceFileUpload = async (event) => {
         <Alert severity="info" sx={{ mb: 2, maxWidth: 600, margin: '0 auto' }}>
           {info}
         </Alert>
+      )}
+      
+      {/* Botón de Restablecer siempre visible */}
+      {(referenceData || data || error || info) && (
+        <Box sx={{ mt: 3, display: 'flex', justifyContent: 'center' }}>
+          <Button
+            variant="outlined"
+            color="error"
+            startIcon={<RefreshIcon />}
+            onClick={handleClear}
+          >
+            Restablecer
+          </Button>
+        </Box>
       )}
 
       {data && (
