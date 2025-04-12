@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { 
   Button, 
   Box, 
@@ -15,7 +15,8 @@ import {
   MenuItem,
   IconButton,
   Tooltip,
-  Stack
+  Stack,
+  CircularProgress
 } from '@mui/material';
 import { 
   Upload as UploadIcon, 
@@ -23,9 +24,11 @@ import {
   Refresh as RefreshIcon,
   FileUpload as FileUploadIcon,
   TableChart as TableChartIcon,
-  Sort as SortIcon
+  Sort as SortIcon,
+  CloudDownload as CloudDownloadIcon
 } from '@mui/icons-material';
 import * as XLSX from 'xlsx';
+import { saveAs } from 'file-saver';
 
 /**
  * @fileoverview Componente para procesar archivos Excel y asignar muebles a productos
@@ -113,6 +116,10 @@ const FileProcessor = () => {
   const [isDraggingReference, setIsDraggingReference] = useState(false);
   /** @type {[boolean, Function]} Estado para indicar si se está arrastrando un archivo de entrada */
   const [isDraggingInput, setIsDraggingInput] = useState(false);
+  /** @type {[boolean, Function]} Estado para indicar si se está descargando el archivo de referencia */
+  const [isDownloadingReference, setIsDownloadingReference] = useState(false);
+  /** @type {[string|null, Function]} Estado para almacenar mensajes de información */
+  const [info, setInfo] = useState(null);
 
   /**
    * @description Normaliza los códigos de producto para facilitar la comparación
@@ -149,7 +156,72 @@ const FileProcessor = () => {
   };
   
   // In handleReferenceFileUpload, fix the processing logic:
-  const handleReferenceFileUpload = async (event) => {
+  /**
+ * @description Descarga el archivo de referencia desde la URL predefinida
+ */
+const handleDownloadReference = async () => {
+  setIsDownloadingReference(true);
+  setError(null);
+  setInfo('Descargando archivo de referencia...');
+  
+  try {
+    // URL del archivo de ejemplo incluido en el proyecto
+    const response = await fetch('ejemplos/Referencia.xlsx');
+    
+    if (!response.ok) {
+      throw new Error(`Error al descargar: ${response.status} ${response.statusText}`);
+    }
+    
+    const arrayBuffer = await response.arrayBuffer();
+    const data = new Uint8Array(arrayBuffer);
+    
+    // Procesar el archivo descargado
+    const workbook = XLSX.read(data, { type: 'array' });
+    const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+    const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 'A' });
+    
+    if (jsonData.length === 0) {
+      throw new Error('El archivo de referencia está vacío');
+    }
+    
+    // Normalizar los datos
+    const headers = jsonData[0];
+    let codigoKey = 'B', muebleKey = 'A';
+    
+    Object.keys(headers).forEach(key => {
+      const normalized = normalizeHeader(headers[key]);
+      if (normalized.includes('codigo ord 1')) codigoKey = key;
+      if (normalized.includes('mueble')) muebleKey = key;
+    });
+    
+    const normalizedData = jsonData.slice(1).map(row => ({
+      mueble: row[muebleKey],
+      codigo: normalizeCode(row[codigoKey])
+    }));
+    
+    console.log('Datos de referencia descargados:', normalizedData);
+    setReferenceData(normalizedData);
+    setInfo('Archivo de referencia descargado y procesado correctamente');
+    
+    // Guardar una copia local del archivo
+    saveAs(
+      new Blob([data], { type: 'application/octet-stream' }),
+      'Referencia.xlsx'
+    );
+    
+    // Limpiar el mensaje de información después de 5 segundos
+    setTimeout(() => {
+      setInfo(null);
+    }, 5000);
+  } catch (err) {
+    console.error('Error al descargar el archivo de referencia:', err);
+    setError(`Error al descargar el archivo de referencia: ${err.message}`);
+  } finally {
+    setIsDownloadingReference(false);
+  }
+};
+
+const handleReferenceFileUpload = async (event) => {
     const file = event.target.files[0];
     if (!file) return;
 
@@ -376,6 +448,30 @@ const FileProcessor = () => {
               <li>Descarga el archivo resultante con la columna de muebles agregada</li>
             </Typography>
             
+            <Box sx={{ mb: 3, p: 2, border: '1px solid rgba(144, 202, 249, 0.5)', borderRadius: 1, backgroundColor: 'rgba(144, 202, 249, 0.08)' }}>
+              <Typography variant="body2" sx={{ mb: 1, color: '#90caf9', textAlign: 'center' }}>
+                ¿No tienes el archivo de referencia? Puedes descargarlo automáticamente:
+              </Typography>
+              <Button
+                variant="outlined"
+                color="primary"
+                onClick={handleDownloadReference}
+                disabled={isDownloadingReference}
+                startIcon={isDownloadingReference ? <CircularProgress size={20} color="inherit" /> : <CloudDownloadIcon />}
+                sx={{ 
+                  width: '100%',
+                  borderColor: '#90caf9',
+                  color: '#90caf9',
+                  '&:hover': { 
+                    backgroundColor: 'rgba(144, 202, 249, 0.08)',
+                    borderColor: '#64b5f6' 
+                  }
+                }}
+              >
+                {isDownloadingReference ? 'Descargando...' : 'Descargar archivo de referencia'}
+              </Button>
+            </Box>
+            
             <Stack spacing={3} direction="column" sx={{ width: '100%', maxWidth: 600, alignItems: 'stretch' }}>
               <DropZone
                 onDrop={handleReferenceFileDrop}
@@ -505,6 +601,12 @@ const FileProcessor = () => {
       {error && (
         <Alert severity="error" sx={{ mb: 2, maxWidth: 600, margin: '0 auto' }}>
           {error}
+        </Alert>
+      )}
+      
+      {info && (
+        <Alert severity="info" sx={{ mb: 2, maxWidth: 600, margin: '0 auto' }}>
+          {info}
         </Alert>
       )}
 
