@@ -158,8 +158,77 @@ const FileProcessor = () => {
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '');
   };
-  
-  // In handleReferenceFileUpload, fix the processing logic:
+
+  /**
+   * @description Identifica la columna de código de producto usando múltiples criterios
+   * @param {Object} row - Fila de datos para analizar
+   * @returns {string|null} Nombre de la columna de código o null si no se encuentra
+   */
+  const identifyCodeColumn = (row) => {
+    // Criterios para identificar la columna de código
+    const possibleColumns = [];
+    
+    // Criterio 1: Nombre de columna contiene 'cod'
+    for (const key in row) {
+      const normalizedKey = normalizeHeader(key);
+      if (normalizedKey.includes('cod')) {
+        possibleColumns.push({
+          key,
+          priority: 1, // Alta prioridad para columnas con 'cod' en el nombre
+          reason: 'Nombre contiene "cod"'
+        });
+      }
+    }
+    
+    // Criterio 2: Contenido son números de 4 dígitos
+    for (const key in row) {
+      const value = String(row[key]);
+      if (/^\d{4}$/.test(value)) {
+        possibleColumns.push({
+          key,
+          priority: 2, // Prioridad media para columnas con valores de 4 dígitos
+          reason: 'Contiene números de 4 dígitos'
+        });
+      }
+    }
+    
+    // Criterio 3: Nombres específicos conocidos (para compatibilidad con versiones anteriores)
+    const knownCodeColumns = ['CodProducto', 'COD', 'Código', 'Codigo', 'Code'];
+    for (const key in row) {
+      if (knownCodeColumns.includes(key) || knownCodeColumns.some(known => normalizeHeader(key) === normalizeHeader(known))) {
+        possibleColumns.push({
+          key,
+          priority: 0, // Máxima prioridad para nombres conocidos
+          reason: 'Nombre de columna conocido'
+        });
+      }
+    }
+    
+    // Si no encontramos nada, intentar con la primera columna que parezca un código
+    if (possibleColumns.length === 0) {
+      for (const key in row) {
+        const value = String(row[key]);
+        // Buscar cualquier valor alfanumérico que parezca un código
+        if (/^[A-Z0-9]{3,6}$/i.test(value)) {
+          possibleColumns.push({
+            key,
+            priority: 3, // Baja prioridad
+            reason: 'Formato similar a un código'
+          });
+        }
+      }
+    }
+    
+    // Ordenar por prioridad (menor número = mayor prioridad)
+    possibleColumns.sort((a, b) => a.priority - b.priority);
+    
+    // Registrar las columnas candidatas para depuración
+    console.log('Columnas candidatas para código:', possibleColumns);
+    
+    // Devolver la columna con mayor prioridad, o null si no hay candidatos
+    return possibleColumns.length > 0 ? possibleColumns[0].key : null;
+  };
+
   /**
  * @description Descarga el archivo de referencia desde la URL predefinida
  */
@@ -323,9 +392,19 @@ const handleReferenceFileUpload = async (event) => {
             throw new Error('El archivo está vacío');
           }
 
+          // Identificar la columna de código en la primera fila
+          const firstRow = jsonData[0];
+          const codeColumnName = identifyCodeColumn(firstRow);
+          
+          if (!codeColumnName) {
+            throw new Error('No se pudo identificar la columna de código en el archivo. Verifica el formato.');
+          }
+          
+          console.log('Columna de código identificada:', codeColumnName);
+
           // Procesar datos y colocar mueble como primera columna
           const processedData = jsonData.map(row => {
-            const normalizedCode = normalizeCode(row.CodProducto);
+            const normalizedCode = normalizeCode(row[codeColumnName]);
             console.log('Buscando código:', normalizedCode);
             const reference = referenceData.find(ref => ref.codigo === normalizedCode);
             console.log('Referencia encontrada:', reference);
@@ -342,7 +421,7 @@ const handleReferenceFileUpload = async (event) => {
           setShowUploadButtons(false);
         } catch (err) {
           console.error('Error al procesar el archivo:', err);
-          setError('Error al procesar el archivo. Verifica que el formato sea correcto y contenga los datos necesarios.');
+          setError(`Error al procesar el archivo: ${err.message}`);
         }
       };
 
