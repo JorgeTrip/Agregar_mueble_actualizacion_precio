@@ -239,7 +239,7 @@ const handleDownloadReference = async () => {
   
   try {
     // URL del archivo de ejemplo incluido en el proyecto
-    const response = await fetch('../../data/Referencia.xlsx');
+    const response = await fetch('./data/Referencia_mueble_14-04-25.xlsx');
     if (!response.ok) {
       throw new Error(`Error al descargar: ${response.status} ${response.statusText}`);
     }
