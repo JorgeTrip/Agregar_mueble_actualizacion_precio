@@ -44,6 +44,7 @@ function DosageCalculator() {
   // Estados para la comparación de concentraciones de antibióticos
   const [originalConcentration, setOriginalConcentration] = useState('500');
   const [alternativeConcentration, setAlternativeConcentration] = useState('500');
+const [allowAltDose, setAllowAltDose] = useState(false);
   const [alternativeDose, setAlternativeDose] = useState(null);
   const [alternativeVolume, setAlternativeVolume] = useState(null);
 
@@ -95,6 +96,10 @@ function DosageCalculator() {
    */
   useEffect(() => {
     if (medication === 'antibiotic') {
+      // Si la concentración alternativa está deshabilitada, igualarla a la original
+      if (!allowAltDose && alternativeConcentration !== originalConcentration) {
+        setAlternativeConcentration(originalConcentration);
+      }
       calculateAntibioticVolume();
     } else if (weight && !isNaN(weight) && parseFloat(weight) > 0) {
       calculateDosage();
@@ -104,7 +109,19 @@ function DosageCalculator() {
       setDosage(null);
       setTotalDaily(null);
     }
-  }, [medication, concentration, weight, prescribedDose, frequency, duration, originalConcentration, alternativeConcentration]);
+  }, [medication, concentration, weight, prescribedDose, duration, originalConcentration, alternativeConcentration, allowAltDose]);
+
+// Ajuste automático de frecuencia SOLO cuando cambia la concentración
+useEffect(() => {
+  if (medication === 'antibiotic' && !allowAltDose) {
+    const origConcNum = parseFloat(originalConcentration);
+    if (origConcNum >= 750) {
+      setFrequency('12');
+    } else if (origConcNum === 500) {
+      setFrequency('8');
+    }
+  }
+}, [originalConcentration, allowAltDose, medication]);
 
   /**
    * Calcula la dosis de medicamento basada en el peso del niño
@@ -311,21 +328,40 @@ function DosageCalculator() {
                   </Select>
                 </FormControl>
                 
-                <FormControl fullWidth sx={{ mb: 2 }}>
-                  <InputLabel id="alternative-concentration-label">Concentración Alternativa</InputLabel>
-                  <Select
-                    labelId="alternative-concentration-label"
-                    value={alternativeConcentration}
-                    label="Concentración Alternativa"
-                    onChange={(e) => setAlternativeConcentration(e.target.value)}
-                  >
-                    {medications.antibiotic.concentrations.map((conc) => (
-                      <MenuItem key={conc.value} value={conc.value}>
-                        {conc.label}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+  <FormControl fullWidth>
+    <InputLabel id="alternative-concentration-label">Concentración Alternativa</InputLabel>
+    <Select
+      labelId="alternative-concentration-label"
+      value={alternativeConcentration}
+      label="Concentración Alternativa"
+      onChange={(e) => setAlternativeConcentration(e.target.value)}
+      disabled={!allowAltDose}
+      sx={(theme) => !allowAltDose
+        ? {
+            bgcolor: theme.palette.mode === 'dark' ? 'rgba(80,80,80,0.4)' : '#f0f0f0',
+            color: theme.palette.mode === 'dark' ? '#bbb' : undefined
+          }
+        : undefined}
+    >
+      {medications.antibiotic.concentrations.map((conc) => (
+        <MenuItem key={conc.value} value={conc.value}>
+          {conc.label}
+        </MenuItem>
+      ))}
+    </Select>
+  </FormControl>
+  <Box sx={{ ml: 2, display: 'flex', alignItems: 'center' }}>
+    <input
+      type="checkbox"
+      id="allowAltDose"
+      checked={allowAltDose}
+      onChange={e => setAllowAltDose(e.target.checked)}
+      style={{ marginRight: 4 }}
+    />
+    <label htmlFor="allowAltDose" style={{ fontSize: '0.8em', color: '#888' }}>dosis diferente</label>
+  </Box>
+</Box>
                 
                 <TextField
                   fullWidth
@@ -417,9 +453,9 @@ function DosageCalculator() {
                       <Typography variant="body1" sx={{ ml: 2, mb: 1 }}>
                         - Dosis por toma: {prescribedDose} ml
                       </Typography>
-                      <Typography variant="body1" sx={{ ml: 2, mb: 1 }}>
-                        - Volumen total necesario: {formatDosage(requiredVolume)} ml
-                      </Typography>
+                      <Typography variant="body3" sx={{ ml: 0, mb: 1, fontWeight: 'bold', color: '#1976d2', bgcolor: '#e3f2fd', px: 2, py: 1, borderRadius: 2, fontSize: '1.2em', boxShadow: 2 }}>
+  - Vol. total necesario: {formatDosage(requiredVolume)} ml
+</Typography>
                       
                       {originalConcentration !== alternativeConcentration && (
                         <>

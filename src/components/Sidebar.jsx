@@ -7,6 +7,7 @@ import {
   Medication as MedicationIcon,
   LocalPharmacy as PharmacyIcon,
   MenuBook as VademecumIcon,
+  LocalDrink as SyrupIcon,
   DarkMode as DarkModeIcon,
   LightMode as LightModeIcon,
   ChevronLeft as ChevronLeftIcon,
@@ -199,10 +200,10 @@ function Sidebar({ onSelect, toggleTheme, themeMode }) {
         </Tooltip>
         
         <Tooltip title="Calculadora de Dosis Pediátricas" arrow placement={isMobile ? "bottom" : "right"}>
-          <IconButton color="inherit" onClick={() => onSelect('dosageCalculator')} sx={{ my: isMobile ? 0 : 0.5 }}>
-            <MedicationIcon sx={{ fontSize: isMobile ? 25 : 40 }} />
-          </IconButton>
-        </Tooltip>
+  <IconButton color="inherit" onClick={() => onSelect('dosageCalculator')} sx={{ my: isMobile ? 0 : 0.5 }}>
+    <SyrupIcon sx={{ fontSize: isMobile ? 25 : 40 }} />
+  </IconButton>
+</Tooltip>
         
         <Tooltip title="Precios de Medicamentos" arrow placement={isMobile ? "bottom" : "right"}>
           <IconButton color="inherit" onClick={() => onSelect('medicationPrices')} sx={{ my: isMobile ? 0 : 0.5 }}>
