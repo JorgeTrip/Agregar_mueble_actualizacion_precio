@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Container, Typography, CssBaseline, ThemeProvider, createTheme, Box, AppBar, Toolbar } from '@mui/material';
+import { Container, Typography, CssBaseline, ThemeProvider, createTheme, Box, AppBar, Toolbar, Button } from '@mui/material';
 import FileProcessor from './components/FileProcessor';
 import Sidebar from './components/Sidebar';
 import CashAssistant from './components/CashAssistant';
@@ -7,6 +7,7 @@ import ClosureChecklist from './components/ClosureChecklist';
 import DosageCalculator from './components/DosageCalculator';
 import MedicationPrices from './components/MedicationPrices';
 import ArgentinaVademecum from './components/ArgentinaVademecum';
+import PriceUpdater from './components/PriceUpdater';
 
 // Componente principal de la aplicación que integra todas las herramientas para farmacia
 // Utiliza Material-UI para el diseño y gestiona la navegación entre componentes
@@ -263,7 +264,7 @@ function App() {
                   fontWeight: 'bold',
                 }}
               >
-                Procesador de lista de Precios con Muebles
+                Herramientas para Listas de Precios
               </Typography>
               <Typography
                 variant="subtitle1"
@@ -277,7 +278,61 @@ function App() {
               >
               
               </Typography>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, maxWidth: '600px', mx: 'auto' }}>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  size="large"
+                  onClick={() => setSelectedComponent('priceUpdater')}
+                  sx={{ 
+                    py: 2,
+                    fontSize: '1.1rem',
+                    backgroundColor: 'rgba(25, 118, 210, 0.8)',
+                    '&:hover': { backgroundColor: 'rgba(25, 118, 210, 1)' }
+                  }}
+                >
+                  Actualización de Precios
+                </Button>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  size="large"
+                  onClick={() => setSelectedComponent('fileProcessor')}
+                  sx={{ 
+                    py: 2,
+                    fontSize: '1.1rem',
+                    backgroundColor: 'rgba(25, 118, 210, 0.8)',
+                    '&:hover': { backgroundColor: 'rgba(25, 118, 210, 1)' }
+                  }}
+                >
+                  Agregar Muebles a Planillas de Precios
+                </Button>
+              </Box>
+            </Box>
+            
+            {/* Procesador de archivos - Componente para agregar muebles a planillas */}
+            {/* Se muestra solo cuando selectedComponent es 'fileProcessor' */}
+            <Box sx={{ display: selectedComponent === 'fileProcessor' ? 'block' : 'none', width: '100%' }}>
+              <Typography
+                variant="h4"
+                component="h1"
+                gutterBottom
+                sx={{
+                  color: '#90caf9',
+                  fontWeight: 'bold',
+                  textAlign: 'center',
+                  mb: 2
+                }}
+              >
+                Agregar Muebles a Planillas de Precios
+              </Typography>
               <FileProcessor />
+            </Box>
+            
+            {/* Actualizador de Precios - Componente para actualizar precios */}
+            {/* Se muestra solo cuando selectedComponent es 'priceUpdater' */}
+            <Box sx={{ display: selectedComponent === 'priceUpdater' ? 'block' : 'none', width: '100%' }}>
+              <PriceUpdater />
             </Box>
             
             {/* Asistente de Caja - Componente para gestionar operaciones de caja */}
