@@ -35,26 +35,124 @@ function CashAssistant() {
   const [amounts, setAmounts] = useState([]);
   /** @type {[string, Function]} Estado para el monto que se está ingresando actualmente */
   const [currentAmount, setCurrentAmount] = useState('');
+  /** @type {[string, Function]} Estado para el valor formateado del monto actual */
+  const [formattedAmount, setFormattedAmount] = useState('');
   /** @type {[string, Function]} Estado para el fondo de caja */
   const [cashFund, setCashFund] = useState('');
+  /** @type {[string, Function]} Estado para el valor formateado del fondo de caja */
+  const [formattedCashFund, setFormattedCashFund] = useState('');
   /** @type {[boolean, Function]} Estado para controlar si se incluye el fondo de caja en los cálculos */
   const [includeCashFund, setIncludeCashFund] = useState(false);
   /** @type {[number, Function]} Estado para el total reportado por el sistema */
   const [systemTotal, setSystemTotal] = useState(0);
+  /** @type {[string, Function]} Estado para el valor formateado del total del sistema */
+  const [formattedSystemTotal, setFormattedSystemTotal] = useState('');
   /** @type {[number, Function]} Estado para la diferencia entre el total físico y el del sistema */
   const [discrepancy, setDiscrepancy] = useState(0);
 
   /**
    * @description Formatea un valor numérico a formato de moneda argentina
    * @param {number} value - El valor a formatear
-   * @returns {string} El valor formateado como moneda argentina
+   * @returns {string} El valor formateado como moneda argentina con punto como separador de miles y coma para decimales
    */
   const formatARS = (value) => {
-    return new Intl.NumberFormat('es-AR', {
+    if (value === '' || value === null || value === undefined) return '';
+    
+    // Usar Intl.NumberFormat para formatear con puntos y comas
+    const formatted = new Intl.NumberFormat('es-AR', {
       style: 'decimal',
+      useGrouping: true,
       minimumFractionDigits: 2,
       maximumFractionDigits: 2
     }).format(value);
+    
+    return formatted;
+  };
+
+  /**
+   * @description Convierte un valor formateado a número
+   * @param {string} formattedValue - El valor formateado
+   * @returns {number} El valor numérico
+   */
+  const parseFormattedValue = (formattedValue) => {
+    if (!formattedValue) return 0;
+    // Eliminar todos los puntos y reemplazar la coma por punto decimal
+    const numericString = formattedValue.replace(/\./g, '').replace(',', '.');
+    return parseFloat(numericString) || 0;
+  };
+
+  /**
+   * @description Maneja el cambio en un campo numérico con formato
+   * @param {string} value - El valor ingresado
+   * @param {Function} setRawValue - Función para establecer el valor crudo
+   * @param {Function} setFormattedValue - Función para establecer el valor formateado
+   * @param {string} prevValue - El valor anterior formateado (opcional)
+   */
+  const handleFormattedChange = (value, setRawValue, setFormattedValue, prevValue = '') => {
+    // Si es un valor vacío, reiniciar ambos estados
+    if (value === '') {
+      setRawValue('');
+      setFormattedValue('');
+      return;
+    }
+    
+    // Detectar si se acaba de agregar un punto (probablemente desde el teclado numérico)
+    const justAddedDot = value.endsWith('.') && !prevValue.endsWith(',');
+    
+    // Conservar los puntos de miles existentes y solo convertir el último punto a coma si se acaba de agregar
+    let processedValue;
+    if (justAddedDot) {
+      // Si se acaba de agregar un punto al final, convertirlo en coma
+      processedValue = value.slice(0, -1) + ',';
+    } else {
+      // De lo contrario, mantener el valor tal como está
+      processedValue = value;
+    }
+    
+    // Eliminar cualquier caracter que no sea dígito, punto o coma
+    const cleanValue = processedValue.replace(/[^0-9.,]/g, '');
+    
+    // Verificar si ya existe una coma decimal
+    const hasDecimal = cleanValue.includes(',');
+    
+    // Separar la parte entera y decimal (si existe)
+    let [integerPart, decimalPart] = cleanValue.split(',');
+    
+    // Eliminar cualquier punto existente en la parte entera para reformatearla
+    integerPart = integerPart ? integerPart.replace(/\./g, '') : '';
+    
+    // Formatear la parte entera con puntos cada 3 dígitos
+    let formattedInteger = '';
+    for (let i = 0; i < integerPart.length; i++) {
+      if (i > 0 && (integerPart.length - i) % 3 === 0) {
+        formattedInteger += '.';
+      }
+      formattedInteger += integerPart[i];
+    }
+    
+    // Reconstruir el valor con la parte decimal si existe
+    let displayValue = formattedInteger;
+    if (decimalPart !== undefined) {
+      displayValue += ',' + decimalPart;
+    }
+    
+    // Para cálculos internos, convertir a formato numérico estándar
+    let numericValue = integerPart;
+    if (decimalPart !== undefined) {
+      numericValue += '.' + decimalPart;
+    }
+    
+    // Guardar ambos valores: el numérico para cálculos y el formateado para mostrar
+    const parsedValue = parseFloat(numericValue);
+    
+    if (!isNaN(parsedValue)) {
+      setRawValue(parsedValue.toString());
+      setFormattedValue(displayValue);
+    } else if (displayValue === '' || displayValue === ',') {
+      // Si solo hay una coma o está vacío
+      setRawValue('');
+      setFormattedValue(displayValue);
+    }
   };
 
   /**
@@ -81,8 +179,11 @@ function CashAssistant() {
     if (e.key === 'Enter' && currentAmount) {
       const amount = parseFloat(currentAmount);
       if (!isNaN(amount) && amount > 0) {
+        // Almacenar el valor con 2 decimales fijos
         setAmounts(prev => [...prev, amount.toFixed(2)]);
+        // Limpiar los campos de entrada
         setCurrentAmount('');
+        setFormattedAmount('');
       }
     }
   };
@@ -92,8 +193,12 @@ function CashAssistant() {
    */
   const handleClearAll = () => {
     setAmounts([]);
+    setCurrentAmount('');
+    setFormattedAmount('');
     setCashFund('');
+    setFormattedCashFund('');
     setSystemTotal(0);
+    setFormattedSystemTotal('');
     setIncludeCashFund(false);
   };
 
@@ -130,11 +235,13 @@ function CashAssistant() {
           <TextField
             fullWidth
             label="Ingresar monto (Presione Enter)"
-            type="number"
-            value={currentAmount}
-            onChange={(e) => setCurrentAmount(e.target.value)}
+            value={formattedAmount}
+            onChange={(e) => handleFormattedChange(e.target.value, setCurrentAmount, setFormattedAmount, formattedAmount)}
             onKeyPress={handleAddAmount}
-            InputProps={{ inputProps: { min: 0, step: 0.01 } }}
+            InputProps={{
+              inputProps: { inputMode: 'decimal' },
+              startAdornment: formattedAmount ? '$' : null
+            }}
             sx={{ mb: 3 }}
           />
 
@@ -173,15 +280,11 @@ function CashAssistant() {
             <TextField
               fullWidth
               label="Fondo de caja"
-              type="number"
-              value={cashFund}
-              onChange={(e) => setCashFund(e.target.value)}
+              value={formattedCashFund}
+              onChange={(e) => handleFormattedChange(e.target.value, setCashFund, setFormattedCashFund, formattedCashFund)}
               InputProps={{
-                inputProps: { 
-                  min: 0,
-                  step: 0.01,
-                  pattern: "[0-9]*" 
-                }
+                inputProps: { inputMode: 'decimal' },
+                startAdornment: formattedCashFund ? '$' : null
               }}
               sx={{ mt: 2 }}
             />
@@ -220,19 +323,16 @@ function CashAssistant() {
                     <TextField
                       fullWidth
                       label="Total sistema"
-                      type="number"
-                      value={systemTotal || ''}
-                      onChange={(e) => setSystemTotal(Number(e.target.value))}
-                      onFocus={(e) => e.target.value === '0' && setSystemTotal('')}
+                      value={formattedSystemTotal}
+                      onChange={(e) => handleFormattedChange(e.target.value, setSystemTotal, setFormattedSystemTotal, formattedSystemTotal)}
+                      onFocus={(e) => systemTotal === 0 && setFormattedSystemTotal('')}
                       InputProps={{
-                        inputProps: { 
-                          min: 0,
-                          step: 0.01
-                        }
+                        inputProps: { inputMode: 'decimal' },
+                        startAdornment: formattedSystemTotal ? '$' : null
                       }}
                     />
                   </TableCell>
-                  <TableCell align="right" sx={{ width: '150px' }}>${formatARS(systemTotal)}</TableCell>
+                  <TableCell align="right" sx={{ width: '150px' }}>${formattedSystemTotal || (systemTotal ? formatARS(systemTotal) : '')}</TableCell>
                 </TableRow>
                 <TableRow>
                   <TableCell>Diferencia</TableCell>
