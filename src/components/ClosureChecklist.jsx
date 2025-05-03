@@ -44,26 +44,193 @@ const predefinedItems = [
  * @returns {JSX.Element} Componente de checklist de cierre
  */
 function ClosureChecklist() {
-  /** @type {[{name: string, amount: string}[], Function]} Estado para almacenar los items del checklist */
+  /** @type {[{name: string, amount: string, formattedAmount: string}[], Function]} Estado para almacenar los items del checklist */
   const [items, setItems] = useState(
-    predefinedItems.map(name => ({ name, amount: '' }))
+    predefinedItems.map(name => ({ name, amount: '', formattedAmount: '' }))
   );
-  /** @type {[{name: string, amount: string}, Function]} Estado para el nuevo item que se está ingresando */
-  const [newItem, setNewItem] = useState({ name: '', amount: '' });
+  /** @type {[{name: string, amount: string, formattedAmount: string}, Function]} Estado para el nuevo item que se está ingresando */
+  const [newItem, setNewItem] = useState({ name: '', amount: '', formattedAmount: '' });
   /** @type {React.MutableRefObject<HTMLInputElement[]>} Referencias a los campos de entrada para navegación con teclado */
   const inputRefs = useRef([]);
 
   /**
    * @description Formatea un valor numérico a formato de moneda argentina
    * @param {number} value - El valor a formatear
-   * @returns {string} El valor formateado como moneda argentina
+   * @returns {string} El valor formateado como moneda argentina con punto como separador de miles y coma para decimales
    */
   const formatARS = (value) => {
-    return new Intl.NumberFormat('es-AR', {
+    if (value === '' || value === null || value === undefined) return '';
+    
+    // Usar Intl.NumberFormat para formatear con puntos y comas
+    const formatted = new Intl.NumberFormat('es-AR', {
       style: 'decimal',
+      useGrouping: true,
       minimumFractionDigits: 2,
       maximumFractionDigits: 2
     }).format(value);
+    
+    return formatted;
+  };
+  
+  /**
+   * @description Convierte un valor formateado a número
+   * @param {string} formattedValue - El valor formateado
+   * @returns {number} El valor numérico
+   */
+  const parseFormattedValue = (formattedValue) => {
+    if (!formattedValue) return 0;
+    // Eliminar todos los puntos y reemplazar la coma por punto decimal
+    const numericString = formattedValue.replace(/\./g, '').replace(',', '.');
+    return parseFloat(numericString) || 0;
+  };
+
+  /**
+   * @description Maneja el cambio en un campo numérico con formato
+   * @param {string} value - El valor ingresado
+   * @param {Function} setRawValue - Función para establecer el valor crudo
+   * @param {Function} setFormattedValue - Función para establecer el valor formateado
+   * @param {string} prevValue - El valor anterior formateado (opcional)
+   */
+  const handleFormattedChange = (value, index, prevValue = '') => {
+    // Si es un valor vacío, reiniciar ambos estados
+    if (value === '') {
+      const newItems = [...items];
+      newItems[index].amount = '';
+      newItems[index].formattedAmount = '';
+      setItems(newItems);
+      return;
+    }
+    
+    // Detectar si se acaba de agregar un punto (probablemente desde el teclado numérico)
+    const justAddedDot = value.endsWith('.') && !prevValue.endsWith(',');
+    
+    // Conservar los puntos de miles existentes y solo convertir el último punto a coma si se acaba de agregar
+    let processedValue;
+    if (justAddedDot) {
+      // Si se acaba de agregar un punto al final, convertirlo en coma
+      processedValue = value.slice(0, -1) + ',';
+    } else {
+      // De lo contrario, mantener el valor tal como está
+      processedValue = value;
+    }
+    
+    // Eliminar cualquier caracter que no sea dígito, punto o coma
+    const cleanValue = processedValue.replace(/[^0-9.,]/g, '');
+    
+    // Verificar si ya existe una coma decimal
+    const hasDecimal = cleanValue.includes(',');
+    
+    // Separar la parte entera y decimal (si existe)
+    let [integerPart, decimalPart] = cleanValue.split(',');
+    
+    // Eliminar cualquier punto existente en la parte entera para reformatearla
+    integerPart = integerPart ? integerPart.replace(/\./g, '') : '';
+    
+    // Formatear la parte entera con puntos cada 3 dígitos
+    let formattedInteger = '';
+    for (let i = 0; i < integerPart.length; i++) {
+      if (i > 0 && (integerPart.length - i) % 3 === 0) {
+        formattedInteger += '.';
+      }
+      formattedInteger += integerPart[i];
+    }
+    
+    // Reconstruir el valor con la parte decimal si existe
+    let displayValue = formattedInteger;
+    if (decimalPart !== undefined) {
+      displayValue += ',' + decimalPart;
+    }
+    
+    // Para cálculos internos, convertir a formato numérico estándar
+    let numericValue = integerPart;
+    if (decimalPart !== undefined) {
+      numericValue += '.' + decimalPart;
+    }
+    
+    // Guardar ambos valores: el numérico para cálculos y el formateado para mostrar
+    const parsedValue = parseFloat(numericValue);
+    
+    if (!isNaN(parsedValue)) {
+      const newItems = [...items];
+      newItems[index].amount = parsedValue.toString();
+      newItems[index].formattedAmount = displayValue;
+      setItems(newItems);
+    } else if (displayValue === '' || displayValue === ',') {
+      // Si solo hay una coma o está vacío
+      const newItems = [...items];
+      newItems[index].amount = '';
+      newItems[index].formattedAmount = displayValue;
+      setItems(newItems);
+    }
+  };
+  
+  /**
+   * @description Maneja el cambio en un campo numérico con formato para el nuevo item
+   * @param {string} value - El valor ingresado
+   * @param {string} prevValue - El valor anterior formateado (opcional)
+   */
+  const handleNewItemFormattedChange = (value, prevValue = '') => {
+    // Si es un valor vacío, reiniciar ambos estados
+    if (value === '') {
+      setNewItem(prev => ({ ...prev, amount: '', formattedAmount: '' }));
+      return;
+    }
+    
+    // Detectar si se acaba de agregar un punto (probablemente desde el teclado numérico)
+    const justAddedDot = value.endsWith('.') && !prevValue.endsWith(',');
+    
+    // Conservar los puntos de miles existentes y solo convertir el último punto a coma si se acaba de agregar
+    let processedValue;
+    if (justAddedDot) {
+      // Si se acaba de agregar un punto al final, convertirlo en coma
+      processedValue = value.slice(0, -1) + ',';
+    } else {
+      // De lo contrario, mantener el valor tal como está
+      processedValue = value;
+    }
+    
+    // Eliminar cualquier caracter que no sea dígito, punto o coma
+    const cleanValue = processedValue.replace(/[^0-9.,]/g, '');
+    
+    // Verificar si ya existe una coma decimal
+    const hasDecimal = cleanValue.includes(',');
+    
+    // Separar la parte entera y decimal (si existe)
+    let [integerPart, decimalPart] = cleanValue.split(',');
+    
+    // Eliminar cualquier punto existente en la parte entera para reformatearla
+    integerPart = integerPart ? integerPart.replace(/\./g, '') : '';
+    
+    // Formatear la parte entera con puntos cada 3 dígitos
+    let formattedInteger = '';
+    for (let i = 0; i < integerPart.length; i++) {
+      if (i > 0 && (integerPart.length - i) % 3 === 0) {
+        formattedInteger += '.';
+      }
+      formattedInteger += integerPart[i];
+    }
+    
+    // Reconstruir el valor con la parte decimal si existe
+    let displayValue = formattedInteger;
+    if (decimalPart !== undefined) {
+      displayValue += ',' + decimalPart;
+    }
+    
+    // Para cálculos internos, convertir a formato numérico estándar
+    let numericValue = integerPart;
+    if (decimalPart !== undefined) {
+      numericValue += '.' + decimalPart;
+    }
+    
+    // Guardar ambos valores: el numérico para cálculos y el formateado para mostrar
+    const parsedValue = parseFloat(numericValue);
+    
+    if (!isNaN(parsedValue)) {
+      setNewItem(prev => ({ ...prev, amount: parsedValue.toString(), formattedAmount: displayValue }));
+    } else if (displayValue === '' || displayValue === ',') {
+      // Si solo hay una coma o está vacío
+      setNewItem(prev => ({ ...prev, amount: '', formattedAmount: displayValue }));
+    }
   };
 
   /**
@@ -74,9 +241,10 @@ function ClosureChecklist() {
     if (e.key === 'Enter' && newItem.name && newItem.amount) {
       setItems(prev => [...prev, {
         name: newItem.name,
-        amount: parseFloat(newItem.amount).toFixed(2)
+        amount: parseFloat(newItem.amount).toFixed(2),
+        formattedAmount: formatARS(parseFloat(newItem.amount))
       }]);
-      setNewItem({ name: '', amount: '' });
+      setNewItem({ name: '', amount: '', formattedAmount: '' });
     }
   };
 
@@ -86,9 +254,7 @@ function ClosureChecklist() {
    * @param {string} value - Nuevo valor para el monto
    */
   const updateItemAmount = (index, value) => {
-    const newItems = [...items];
-    newItems[index].amount = value;
-    setItems(newItems);
+    handleFormattedChange(value, index, items[index].formattedAmount);
   };
 
   /**
@@ -101,8 +267,8 @@ function ClosureChecklist() {
    * @description Limpia todos los campos y reinicia el estado del componente
    */
   const handleClearAll = () => {
-    setItems(predefinedItems.map(name => ({ name, amount: '' })));
-    setNewItem({ name: '', amount: '' });
+    setItems(predefinedItems.map(name => ({ name, amount: '', formattedAmount: '' })));
+    setNewItem({ name: '', amount: '', formattedAmount: '' });
   };
 
   /**
@@ -174,12 +340,14 @@ function ClosureChecklist() {
                       <TextField
                         fullWidth
                         label="Monto"
-                        type="number"
-                        value={item.amount}
+                        value={item.formattedAmount}
                         onChange={(e) => updateItemAmount(index, e.target.value)}
                         onKeyPress={(e) => handleKeyPress(index, e)}
                         inputRef={(el) => (inputRefs.current[index] = el)}
-                        InputProps={{ inputProps: { min: 0, step: 0.01 } }}
+                        InputProps={{
+                          inputProps: { inputMode: 'decimal' },
+                          startAdornment: item.formattedAmount ? '$' : null
+                        }}
                       />
                     </Grid>
                   </Grid>
@@ -208,11 +376,13 @@ function ClosureChecklist() {
                 <TextField
                   fullWidth
                   label="Monto"
-                  type="number"
-                  value={newItem.amount}
-                  onChange={(e) => setNewItem(prev => ({ ...prev, amount: e.target.value }))}
+                  value={newItem.formattedAmount}
+                  onChange={(e) => handleNewItemFormattedChange(e.target.value, newItem.formattedAmount)}
                   onKeyPress={handleAddCustom}
-                  InputProps={{ inputProps: { min: 0, step: 0.01 } }}
+                  InputProps={{
+                    inputProps: { inputMode: 'decimal' },
+                    startAdornment: newItem.formattedAmount ? '$' : null
+                  }}
                 />
               </Grid>
             </Grid>
