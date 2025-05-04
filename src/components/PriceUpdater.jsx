@@ -6,14 +6,16 @@ import {
   Alert,
   Stack,
   Paper,
-  Divider
+  Divider,
+  CircularProgress
 } from '@mui/material';
 import { 
   Upload as UploadIcon, 
   Download as DownloadIcon,
   Search as SearchIcon,
   CloudDownload as CloudDownloadIcon,
-  Edit as EditIcon
+  Edit as EditIcon,
+  RestartAlt as RestartAltIcon
 } from '@mui/icons-material';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
@@ -28,7 +30,7 @@ import {
   processUpdateFile, 
   updatePrices, 
   processOffersFile,
-  integrateOffers 
+  integrateOffers
 } from './PriceUpdater/dataProcessors';
 
 /**
@@ -542,6 +544,40 @@ const PriceUpdater = () => {
     setSearchResults([]);
   }, []);
 
+  /**
+   * @description Reinicia el estado y vuelve a empezar
+   */
+  const handleReset = useCallback(() => {
+    // Reiniciar archivos
+    setReferenceFile(null);
+    setUpdateFile(null);
+    setOffersFile(null);
+    
+    // Reiniciar datos
+    setReferenceData(null);
+    setUpdateData(null);
+    setUpdatedData(null);
+    
+    // Reiniciar estados de UI
+    setError(null);
+    setInfo(null);
+    setIsProcessing(false);
+    setIsDraggingReference(false);
+    setIsDraggingUpdate(false);
+    setIsDraggingOffers(false);
+    
+    // Reiniciar búsqueda
+    setSearchTerm('');
+    setSearchResults([]);
+    
+    // Reiniciar muebles
+    setProductsWithoutFurniture([]);
+    setAvailableFurnitures([]);
+    
+    // Mostrar mensaje informativo
+    setInfo('Se ha reiniciado el proceso. Puede cargar nuevos archivos.');
+  }, []);
+
   return (
     <Box sx={{ width: '100%', maxWidth: '900px', margin: '0 auto', p: 2 }}>
       <Typography variant="h4" component="h1" gutterBottom sx={{ color: '#90caf9', fontWeight: 'bold', textAlign: 'center', mb: 2 }}>
@@ -559,7 +595,7 @@ const PriceUpdater = () => {
             isDragActive={isDraggingReference}
             setIsDragActive={setIsDraggingReference}
             disabled={!!referenceFile || isProcessing}
-            title="Cargar Planilla de Referencia (A)"
+            title="Cargar Planilla de Referencia"
             description="Arrastre aquí su planilla completa con muebles y precios"
             icon={<CloudDownloadIcon sx={{ fontSize: 40 }} />}
             file={referenceFile}
@@ -576,7 +612,7 @@ const PriceUpdater = () => {
             isDragActive={isDraggingUpdate}
             setIsDragActive={setIsDraggingUpdate}
             disabled={!referenceFile || !!updateFile || !!offersFile || isProcessing}
-            title="Cargar Planilla de Actualización (B)"
+            title="Cargar Planilla de Actualización"
             description="Arrastre aquí su planilla con los nuevos precios (con códigos)"
             icon={<UploadIcon sx={{ fontSize: 40 }} />}
             file={updateFile}
@@ -663,7 +699,7 @@ const PriceUpdater = () => {
         </Box>
       )}
 
-      {/* Botones de descarga */}
+      {/* Botones de descarga y reinicio */}
       {updatedData && (
         <Stack 
           direction={{ xs: 'column', sm: 'row' }} 
@@ -689,13 +725,28 @@ const PriceUpdater = () => {
           </Button>
           
           <Button
-            variant="outlined"
+            variant="contained"
             color="error"
-            onClick={handleClear}
+            startIcon={<RestartAltIcon />}
+            onClick={handleReset}
           >
             Volver a empezar
           </Button>
         </Stack>
+      )}
+      
+      {/* Botón de reinicio siempre visible */}
+      {!updatedData && (referenceFile || updateFile || offersFile) && (
+        <Box mt={4} textAlign="center">
+          <Button
+            variant="contained"
+            color="error"
+            startIcon={<RestartAltIcon />}
+            onClick={handleReset}
+          >
+            Volver a empezar
+          </Button>
+        </Box>
       )}
     </Box>
   );
