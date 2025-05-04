@@ -183,7 +183,7 @@ const PriceUpdater = () => {
     
     setIsProcessing(true);
     setError(null);
-    setInfo("Procesando archivo de actualización de precios...");
+    setInfo("Procesando archivo de actualización...");
     
     const reader = new FileReader();
     
@@ -203,14 +203,15 @@ const PriceUpdater = () => {
         setUpdateData(processedData);
         setUpdateFile(file);
         
-        // Actualizar precios automáticamente
-        const updated = updatePrices(referenceData, processedData);
+        // Actualizar los precios
+        const { updatedData: updated, stats } = updatePrices(referenceData, processedData);
         setUpdatedData(updated);
         
-        setInfo(`Precios actualizados correctamente. Se actualizaron ${updated.length} productos.`);
+        setInfo(`Precios actualizados correctamente. Se actualizaron ${stats.changed} de ${stats.total} productos.`);
+        setIsProcessing(false);
       } catch (err) {
+        console.error("Error al procesar el archivo de actualización:", err);
         setError(`Error al procesar el archivo de actualización: ${err.message}`);
-      } finally {
         setIsProcessing(false);
       }
     };

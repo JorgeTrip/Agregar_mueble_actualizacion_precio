@@ -315,51 +315,66 @@ export const processUpdateFile = (jsonData) => {
 };
 
 /**
- * @description Actualiza los precios en los datos de referencia con los nuevos precios
- * @param {Array} referenceData - Datos de referencia (A)
- * @param {Array} updateData - Datos de actualización (B)
- * @returns {Array} Datos actualizados
+ * @description Actualiza los precios en los datos de referencia con los precios del archivo de actualización
+ * @param {Array} referenceData - Datos del archivo de referencia procesados
+ * @param {Array} updateData - Datos del archivo de actualización procesados
+ * @returns {Object} Objeto con datos actualizados y estadísticas
  */
 export const updatePrices = (referenceData, updateData) => {
-  if (!referenceData || !updateData) {
-    throw new Error("No hay datos para actualizar");
+  if (!referenceData || !updateData || referenceData.length === 0 || updateData.length === 0) {
+    return { updatedData: [], stats: { total: 0, changed: 0 } };
   }
   
-  // Crear un mapa de códigos a nuevos precios para búsqueda rápida
+  // Crear un mapa de códigos a precios para búsqueda rápida
   const priceMap = new Map();
   
   updateData.forEach(item => {
     if (item.Codigo && item.PrecioNuevo) {
-      priceMap.set(normalizeCode(item.Codigo), item.PrecioNuevo);
+      // Normalizar el código para la comparación
+      const normalizedCode = item.Codigo.toString().trim();
+      priceMap.set(normalizedCode, item.PrecioNuevo);
     }
   });
+  
+  // Contador para productos con precio cambiado
+  let changedCount = 0;
   
   // Actualizar los precios en los datos de referencia
   const updatedData = referenceData.map(item => {
-    const normalizedCode = normalizeCode(item.Codigo);
-    const newPrice = priceMap.get(normalizedCode);
+    // Normalizar el código para la comparación
+    const normalizedCode = item.Codigo ? item.Codigo.toString().trim() : '';
     
-    // Si hay un nuevo precio, actualizar el item
-    if (newPrice !== undefined) {
-      return {
-        ...item,
-        PrecioActualizado: newPrice,
-        PrecioAnterior: item.PrecioAnterior || 0,
-        Diferencia: newPrice - (item.PrecioAnterior || 0),
-        PorcentajeCambio: item.PrecioAnterior 
-          ? ((newPrice - item.PrecioAnterior) / item.PrecioAnterior * 100).toFixed(2) + '%'
-          : 'N/A'
-      };
+    // Buscar el precio actualizado
+    const newPrice = priceMap.has(normalizedCode) ? priceMap.get(normalizedCode) : item.PrecioAnterior;
+    
+    // Calcular la diferencia y el porcentaje de cambio
+    const diferencia = newPrice - (item.PrecioAnterior || 0);
+    const porcentajeCambio = item.PrecioAnterior && item.PrecioAnterior !== 0
+      ? ((newPrice - item.PrecioAnterior) / item.PrecioAnterior * 100).toFixed(2) + '%'
+      : 'N/A';
+    
+    // Verificar si el precio realmente cambió
+    const priceChanged = Math.abs(diferencia) > 0.01; // Usar una pequeña tolerancia para evitar problemas de redondeo
+    
+    // Incrementar el contador si el precio cambió
+    if (priceChanged) {
+      changedCount++;
     }
     
-    // Si no hay nuevo precio, mantener el anterior
     return {
       ...item,
-      PrecioActualizado: item.PrecioAnterior,
-      Diferencia: 0,
-      PorcentajeCambio: '0%'
+      PrecioActualizado: newPrice,
+      Diferencia: diferencia,
+      PorcentajeCambio: porcentajeCambio,
+      PrecioCambio: priceChanged // Agregar un indicador de si el precio cambió
     };
   });
   
-  return updatedData;
+  // Estadísticas de actualización
+  const stats = {
+    total: referenceData.length,
+    changed: changedCount
+  };
+  
+  return { updatedData, stats };
 };
