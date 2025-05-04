@@ -86,12 +86,41 @@ const FurnitureEditor = ({ products, onSave, availableFurnitures = [] }) => {
     }
   };
 
+  /**
+   * @description Determina el color del chip según el estado del mueble
+   * @param {string} mueble - Nombre del mueble
+   * @returns {string} Color del chip (error, warning, primary, etc.)
+   */
+  const getMuebleChipColor = (mueble) => {
+    if (!mueble) return 'warning';
+    
+    const lowerMueble = mueble.toLowerCase();
+    
+    // Muebles inválidos o no encontrados
+    if (
+      mueble === 'NO' || 
+      lowerMueble.includes('no encontrado') || 
+      lowerMueble.includes('sin mueble') ||
+      lowerMueble.includes('sin asignar')
+    ) {
+      return 'error';
+    }
+    
+    return 'primary';
+  };
+
   // Extraer muebles únicos de los productos para sugerencias
   const uniqueFurnitures = [...new Set([
     ...availableFurnitures,
     ...editableProducts
       .map(product => product.Mueble)
-      .filter(mueble => mueble && mueble !== 'NO' && mueble !== 'Sin mueble')
+      .filter(mueble => 
+        mueble && 
+        mueble !== 'NO' && 
+        !mueble.toLowerCase().includes('no encontrado') &&
+        !mueble.toLowerCase().includes('sin mueble') &&
+        !mueble.toLowerCase().includes('sin asignar')
+      )
   ])].sort();
 
   // Si no hay productos para editar, no mostrar nada
@@ -112,7 +141,7 @@ const FurnitureEditor = ({ products, onSave, availableFurnitures = [] }) => {
     >
       <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Typography variant="h6" component="h3" color="error">
-          Productos sin mueble asignado ({editableProducts.length})
+          Productos sin mueble asignado o con mueble no válido ({editableProducts.length})
         </Typography>
         <Button
           variant="contained"
@@ -126,8 +155,14 @@ const FurnitureEditor = ({ products, onSave, availableFurnitures = [] }) => {
       </Box>
 
       <Typography variant="body2" sx={{ mb: 2 }}>
-        Estos productos tienen mueble "NO" o no tienen mueble asignado. Edite los muebles para incluirlos en las planillas por mueble.
-        Los productos con mueble "NO" no aparecerán en las planillas por mueble, pero sí en la planilla de referencia completa.
+        Estos productos tienen alguna de las siguientes condiciones:
+        <ul>
+          <li>Mueble "NO" o "no encontrado"</li>
+          <li>Sin mueble asignado</li>
+          <li>Con texto que indica que no tienen mueble válido</li>
+        </ul>
+        Edite los muebles para incluirlos en las planillas por mueble.
+        Los productos con mueble no válido no aparecerán en las planillas por mueble, pero sí en la planilla de referencia completa.
       </Typography>
 
       <TableContainer sx={{ maxHeight: 400 }}>
@@ -183,7 +218,7 @@ const FurnitureEditor = ({ products, onSave, availableFurnitures = [] }) => {
                   ) : (
                     <Chip 
                       label={product.Mueble || 'Sin mueble'} 
-                      color={product.Mueble === 'NO' ? 'error' : product.Mueble ? 'primary' : 'warning'}
+                      color={getMuebleChipColor(product.Mueble)}
                       variant="outlined"
                       size="small"
                     />

@@ -56,11 +56,18 @@ const PriceUpdater = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   
-  // Identificar productos sin mueble o con mueble "NO"
+  // Identificar productos sin mueble, con mueble "NO" o con mueble no encontrado
   useEffect(() => {
     if (updatedData) {
       const withoutFurniture = updatedData.filter(item => 
-        !item.Mueble || item.Mueble === 'NO' || item.Mueble === 'Sin mueble'
+        !item.Mueble || 
+        item.Mueble === 'NO' || 
+        item.Mueble === 'Sin mueble' ||
+        item.Mueble === 'no encontrado' ||
+        item.Mueble === 'NO ENCONTRADO' ||
+        item.Mueble.toLowerCase().includes('no encontrado') ||
+        item.Mueble.toLowerCase().includes('sin asignar') ||
+        item.Mueble.toLowerCase().includes('sin mueble')
       );
       setProductsWithoutFurniture(withoutFurniture);
       
@@ -68,20 +75,54 @@ const PriceUpdater = () => {
       const furnitures = [...new Set(
         updatedData
           .map(item => item.Mueble)
-          .filter(mueble => mueble && mueble !== 'NO' && mueble !== 'Sin mueble')
+          .filter(mueble => 
+            mueble && 
+            mueble !== 'NO' && 
+            mueble !== 'Sin mueble' &&
+            mueble !== 'no encontrado' &&
+            mueble !== 'NO ENCONTRADO' &&
+            !mueble.toLowerCase().includes('no encontrado') &&
+            !mueble.toLowerCase().includes('sin asignar') &&
+            !mueble.toLowerCase().includes('sin mueble')
+          )
       )];
       setAvailableFurnitures(furnitures);
     }
   }, [updatedData]);
   
+  /**
+   * @description Verifica si un mueble es válido para mostrarse en las tablas
+   * @param {string} mueble - Nombre del mueble a verificar
+   * @returns {boolean} True si el mueble es válido, false en caso contrario
+   */
+  const isFurnitureValid = (mueble) => {
+    if (!mueble) return false;
+    
+    const invalidPatterns = [
+      'NO',
+      'Sin mueble',
+      'sin mueble',
+      'no encontrado',
+      'NO ENCONTRADO',
+      'sin asignar'
+    ];
+    
+    // Verificar si el mueble coincide exactamente con alguno de los patrones inválidos
+    if (invalidPatterns.includes(mueble)) return false;
+    
+    // Verificar si el mueble contiene alguno de los patrones inválidos
+    const lowerMueble = mueble.toLowerCase();
+    return !invalidPatterns.some(pattern => lowerMueble.includes(pattern.toLowerCase()));
+  };
+  
   // Agrupar datos por mueble para mostrar en tablas separadas
-  // Excluir productos con mueble "NO" de las tablas por mueble
+  // Excluir productos con muebles inválidos de las tablas por mueble
   const furnitureGroups = updatedData ? 
     Object.entries(
       updatedData
-        .filter(item => item.Mueble && item.Mueble !== 'NO')
+        .filter(item => isFurnitureValid(item.Mueble))
         .reduce((groups, item) => {
-          const furniture = item.Mueble || 'Sin mueble asignado';
+          const furniture = item.Mueble;
           if (!groups[furniture]) groups[furniture] = [];
           groups[furniture].push(item);
           return groups;
@@ -374,7 +415,10 @@ const PriceUpdater = () => {
       {updatedData && !searchTerm && (
         <Box sx={{ mt: 4, mb: 4 }}>
           <Typography variant="h5" gutterBottom>
-            Productos por mueble ({updatedData.filter(item => item.Mueble && item.Mueble !== 'NO').length} productos en {furnitureGroups.length} muebles)
+            Productos por mueble ({updatedData.filter(item => isFurnitureValid(item.Mueble)).length} productos en {furnitureGroups.length} muebles)
+          </Typography>
+          <Typography variant="body2" sx={{ mb: 2, color: 'text.secondary' }}>
+            Se muestran solo los productos con mueble válido. Los productos sin mueble o con muebles como "NO", "no encontrado", etc. se pueden editar en la sección superior.
           </Typography>
           
           {furnitureGroups.map(([furniture, items]) => (
