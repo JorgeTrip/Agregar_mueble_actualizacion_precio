@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { Box, Typography, Alert, Stack, Paper, CircularProgress } from '@mui/material';
-import { CloudDownload as CloudDownloadIcon } from '@mui/icons-material';
+import { Box, Typography, Alert, Stack, Paper, CircularProgress, Button } from '@mui/material';
+import { CloudDownload as CloudDownloadIcon, RestartAlt as RestartAltIcon } from '@mui/icons-material';
 import FileDropZone from './PriceUpdater/FileDropZone';
 import ProductSearch from './PriceUpdater/ProductSearch';
 import FurnitureTable from './PriceUpdater/FurnitureTable';
@@ -190,17 +190,23 @@ const PriceSearch = () => {
   }, [searchTerm]);
   
   /**
-   * @description Reinicia el estado para cargar un nuevo archivo
+   * @description Reinicia el estado del componente
    */
   const handleReset = useCallback(() => {
+    // Confirmar antes de reiniciar
+    if (referenceData && !window.confirm('¿Está seguro de que desea volver a cargar? Se perderán los datos actuales.')) {
+      return;
+    }
+    
     setReferenceFile(null);
     setReferenceData(null);
+    setIsProcessing(false);
     setError(null);
     setInfo(null);
     setSearchTerm('');
     setSearchResults([]);
     setFileDate(null);
-  }, []);
+  }, [referenceData]);
   
   return (
     <Box sx={{ width: '100%', maxWidth: '900px', margin: '0 auto', p: 2 }}>
@@ -271,6 +277,19 @@ const PriceSearch = () => {
               Precios actualizados al: {fileDate}
             </Typography>
           )}
+          
+          {/* Botón para volver a cargar */}
+          <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2, mb: 2 }}>
+            <Button
+              variant="outlined"
+              color="primary"
+              startIcon={<RestartAltIcon />}
+              onClick={handleReset}
+              size="medium"
+            >
+              Volver a cargar archivo
+            </Button>
+          </Box>
           
           {searchResults.length > 0 && (
             <Paper sx={{ mt: 2, p: 2, maxHeight: 500, overflow: 'auto' }}>
