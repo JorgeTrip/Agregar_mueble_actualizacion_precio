@@ -8,6 +8,7 @@ import DosageCalculator from './components/DosageCalculator';
 import MedicationPrices from './components/MedicationPrices';
 import ArgentinaVademecum from './components/ArgentinaVademecum';
 import PriceUpdater from './components/PriceUpdater';
+import PriceSearch from './components/PriceSearch';
 
 // Componente principal de la aplicación que integra todas las herramientas para farmacia
 // Utiliza Material-UI para el diseño y gestiona la navegación entre componentes
@@ -283,6 +284,20 @@ function App() {
                   variant="contained"
                   color="primary"
                   size="large"
+                  onClick={() => setSelectedComponent('priceSearch')}
+                  sx={{ 
+                    py: 2,
+                    fontSize: '1.1rem',
+                    backgroundColor: 'rgba(25, 118, 210, 0.8)',
+                    '&:hover': { backgroundColor: 'rgba(25, 118, 210, 1)' }
+                  }}
+                >
+                  Buscar Precios
+                </Button>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  size="large"
                   onClick={() => setSelectedComponent('priceUpdater')}
                   sx={{ 
                     py: 2,
@@ -327,6 +342,12 @@ function App() {
                 Agregar Muebles a Planillas de Precios
               </Typography>
               <FileProcessor />
+            </Box>
+            
+            {/* Buscador de Precios - Componente para buscar precios */}
+            {/* Se muestra solo cuando selectedComponent es 'priceSearch' */}
+            <Box sx={{ display: selectedComponent === 'priceSearch' ? 'block' : 'none', width: '100%' }}>
+              <PriceSearch />
             </Box>
             
             {/* Actualizador de Precios - Componente para actualizar precios */}

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { 
   Box, 
   TextField, 
@@ -21,6 +21,8 @@ import {
  * @returns {JSX.Element} Componente de búsqueda de productos
  */
 const ProductSearch = ({ onSearch, searchTerm, setSearchTerm, placeholder }) => {
+  // Referencia al campo de búsqueda para poder enfocarlo
+  const searchInputRef = useRef(null);
   /**
    * @description Maneja el cambio en el campo de búsqueda
    * @param {React.ChangeEvent} e - Evento de cambio
@@ -32,11 +34,18 @@ const ProductSearch = ({ onSearch, searchTerm, setSearchTerm, placeholder }) => 
   };
 
   /**
-   * @description Limpia el campo de búsqueda
+   * @description Limpia el campo de búsqueda y enfoca el input
    */
   const handleClearSearch = () => {
     setSearchTerm('');
     onSearch('');
+    
+    // Enfocar el campo de búsqueda después de limpiarlo
+    if (searchInputRef.current) {
+      setTimeout(() => {
+        searchInputRef.current.focus();
+      }, 0);
+    }
   };
 
   /**
@@ -66,6 +75,7 @@ const ProductSearch = ({ onSearch, searchTerm, setSearchTerm, placeholder }) => 
           value={searchTerm}
           onChange={handleSearchChange}
           onKeyPress={handleKeyPress}
+          inputRef={searchInputRef}
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
