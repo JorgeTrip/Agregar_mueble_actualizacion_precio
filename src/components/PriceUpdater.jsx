@@ -336,34 +336,8 @@ const PriceUpdater = () => {
         };
         
         furnitureGroups.forEach(([furniture, items]) => {
-          // Crear un array para los datos con espacio para el título
-          const printData = [];
-          
-          // Agregar título del mueble como primera fila
-          printData.push({
-            'Droga': furniture.toUpperCase(),
-            'Marca': '',
-            'Precio': ''
-          });
-          
-          // Agregar una fila vacía después del título
-          printData.push({
-            'Droga': '',
-            'Marca': '',
-            'Precio': ''
-          });
-          
-          // Agregar los productos
-          items.forEach((item, index) => {
-            printData.push({
-              'Droga': item.Droga,
-              'Marca': item.Marca,
-              'Precio': item.PrecioActualizado
-            });
-          });
-          
-          // Crear la hoja
-          const ws = XLSX.utils.json_to_sheet(printData);
+          // Crear un libro de Excel para esta hoja
+          const ws = XLSX.utils.aoa_to_sheet([]);
           
           // Configurar ancho de columnas (en caracteres)
           ws['!cols'] = [
@@ -372,28 +346,97 @@ const PriceUpdater = () => {
             { wch: 12 }  // Precio - columna estrecha
           ];
           
-          // Aplicar estilos a las celdas
-          const range = XLSX.utils.decode_range(ws['!ref']);
+          // Formatear el título del mueble según las reglas especificadas
+          let titleText = '';
           
-          // Objeto para almacenar los estilos de las celdas
-          if (!ws['!styles']) ws['!styles'] = {};
+          if (furniture.trim().toUpperCase() === 'PS') {
+            titleText = 'Psicofármacos';
+          } else if (furniture.trim().toUpperCase() === 'H') {
+            titleText = 'Heladera';
+          } else {
+            titleText = `Mueble ${furniture.trim().toUpperCase()}`;
+          }
+          
+          // Agregar el título del mueble en la primera fila (celda A1)
+          XLSX.utils.sheet_add_aoa(ws, [[titleText]], { origin: 'A1' });
+          
+          // Agregar una fila vacía (fila 2)
+          XLSX.utils.sheet_add_aoa(ws, [['']], { origin: 'A2' });
+          
+          // Agregar los encabezados de la tabla (fila 3)
+          XLSX.utils.sheet_add_aoa(ws, [['Droga', 'Marca', 'Precio']], { origin: 'A3' });
+          
+          // Preparar los datos de productos
+          const productData = items.map(item => [
+            item.Droga,
+            item.Marca,
+            item.PrecioActualizado || item.PrecioAnterior || ''
+          ]);
+          
+          // Agregar los datos de productos a partir de la fila 4
+          if (productData.length > 0) {
+            XLSX.utils.sheet_add_aoa(ws, productData, { origin: 'A4' });
+          }
+          
+          // Aplicar estilos a las celdas
+          // Fusionar celdas para el título
+          ws['!merges'] = [
+            { s: { r: 0, c: 0 }, e: { r: 0, c: 2 } } // Fusionar A1:C1 para el título
+          ];
+          
+          // Configurar estilos para Excel
+          // Nota: Estos estilos son para la visualización en Excel, no para la exportación
           
           // Estilo para el título (primera fila)
-          ws['!styles']['A1'] = { font: { bold: true, size: 16 }, alignment: { horizontal: 'center' } };
-          ws['!styles']['B1'] = { font: { bold: true, size: 16 }, alignment: { horizontal: 'center' } };
-          ws['!styles']['C1'] = { font: { bold: true, size: 16 }, alignment: { horizontal: 'center' } };
+          ws['A1'] = { 
+            v: titleText, // valor formateado
+            t: 's', // tipo: string
+            s: { // estilo
+              font: { bold: true, sz: 16 },
+              alignment: { horizontal: 'center', vertical: 'center' }
+            }
+          };
           
-          // Estilo para los encabezados (tercera fila)
-          ws['!styles']['A3'] = { font: { bold: true }, fill: { fgColor: { rgb: 'DDDDDD' } } };
-          ws['!styles']['B3'] = { font: { bold: true }, fill: { fgColor: { rgb: 'DDDDDD' } } };
-          ws['!styles']['C3'] = { font: { bold: true }, fill: { fgColor: { rgb: 'DDDDDD' } } };
+          // Estilos para los encabezados (fila 3)
+          ['A3', 'B3', 'C3'].forEach(cell => {
+            if (ws[cell]) {
+              ws[cell].s = {
+                font: { bold: true },
+                fill: { fgColor: { rgb: 'DDDDDD' } },
+                border: {
+                  top: { style: 'thin' },
+                  bottom: { style: 'thin' },
+                  left: { style: 'thin' },
+                  right: { style: 'thin' }
+                }
+              };
+            }
+          });
           
-          // Estilos alternados para las filas de datos
-          for (let i = 4; i <= range.e.r; i++) {
-            const fillColor = i % 2 === 0 ? 'FFFFFF' : 'F5F5F5';
-            ws['!styles'][`A${i}`] = { fill: { fgColor: { rgb: fillColor } } };
-            ws['!styles'][`B${i}`] = { fill: { fgColor: { rgb: fillColor } } };
-            ws['!styles'][`C${i}`] = { fill: { fgColor: { rgb: fillColor } }, alignment: { horizontal: 'right' } };
+          // Estilos alternados para las filas de datos (a partir de la fila 4)
+          const lastRow = 3 + productData.length;
+          for (let r = 4; r <= lastRow; r++) {
+            const fillColor = r % 2 === 0 ? 'F5F5F5' : 'FFFFFF';
+            
+            ['A', 'B', 'C'].forEach(col => {
+              const cell = `${col}${r}`;
+              if (ws[cell]) {
+                ws[cell].s = {
+                  fill: { fgColor: { rgb: fillColor } },
+                  border: {
+                    top: { style: 'thin' },
+                    bottom: { style: 'thin' },
+                    left: { style: 'thin' },
+                    right: { style: 'thin' }
+                  }
+                };
+                
+                // Alinear los precios a la derecha
+                if (col === 'C') {
+                  ws[cell].s.alignment = { horizontal: 'right' };
+                }
+              }
+            });
           }
           
           // Nombre seguro para la hoja
