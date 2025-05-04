@@ -320,6 +320,93 @@ export const processUpdateFile = (jsonData) => {
  * @param {Array} updateData - Datos del archivo de actualización procesados
  * @returns {Object} Objeto con datos actualizados y estadísticas
  */
+/**
+ * @description Procesa una planilla de ofertas
+ * @param {Array} jsonData - Datos del archivo en formato JSON
+ * @returns {Array} Datos procesados de ofertas
+ */
+export const processOffersFile = (jsonData) => {
+  if (!jsonData || jsonData.length < 2) {
+    return [];
+  }
+  
+  // Obtener la fila de encabezados (primera fila)
+  const headerRow = jsonData[0].map(cell => cell ? cell.toString().trim() : '');
+  
+  // Identificar columnas relevantes
+  let productColumnIndex = -1;
+  let priceColumnIndex = -1;
+  
+  // Buscar columnas por patrones comunes en planillas de ofertas
+  for (let i = 0; i < headerRow.length; i++) {
+    const normalizedHeader = normalizeHeader(headerRow[i]);
+    
+    if (
+      normalizedHeader.includes('producto') || 
+      normalizedHeader.includes('articulo') || 
+      normalizedHeader.includes('item') ||
+      normalizedHeader.includes('descripcion')
+    ) {
+      productColumnIndex = i;
+    } else if (
+      normalizedHeader.includes('precio') || 
+      normalizedHeader.includes('oferta') || 
+      normalizedHeader.includes('valor') ||
+      normalizedHeader.includes('$')
+    ) {
+      priceColumnIndex = i;
+    }
+  }
+  
+  // Si no se encuentran las columnas necesarias, usar las primeras columnas
+  if (productColumnIndex === -1 && headerRow.length > 0) {
+    productColumnIndex = 0; // Primera columna
+  }
+  
+  if (priceColumnIndex === -1 && headerRow.length > 1) {
+    priceColumnIndex = 1; // Segunda columna
+  }
+  
+  // Procesar los datos
+  const processedData = [];
+  
+  // Procesar cada fila (excepto la de encabezados)
+  for (let i = 1; i < jsonData.length; i++) {
+    const row = jsonData[i];
+    
+    // Omitir filas vacías
+    if (!row || row.length === 0 || !row[productColumnIndex]) {
+      continue;
+    }
+    
+    // Extraer datos relevantes
+    const productName = row[productColumnIndex] ? row[productColumnIndex].toString().trim() : '';
+    let price = 0;
+    
+    // Extraer y normalizar el precio
+    if (row[priceColumnIndex]) {
+      const priceStr = row[priceColumnIndex].toString().trim();
+      // Eliminar símbolos de moneda y convertir a número
+      price = parseFloat(priceStr.replace(/[^0-9.,]/g, '').replace(',', '.')) || 0;
+    }
+    
+    // Omitir filas sin producto o precio
+    if (!productName || price === 0) {
+      continue;
+    }
+    
+    // Crear objeto con los datos procesados
+    processedData.push({
+      Producto: productName,
+      Precio: price,
+      Mueble: 'NO', // Por defecto, asignar 'NO' para que aparezca en la lista de edición
+      TipoActualizacion: 'oferta' // Marcar como oferta para procesamiento especial
+    });
+  }
+  
+  return processedData;
+};
+
 export const updatePrices = (referenceData, updateData) => {
   if (!referenceData || !updateData || referenceData.length === 0 || updateData.length === 0) {
     return { updatedData: [], stats: { total: 0, changed: 0 } };
@@ -374,6 +461,92 @@ export const updatePrices = (referenceData, updateData) => {
   const stats = {
     total: referenceData.length,
     changed: changedCount
+  };
+  
+  return { updatedData, stats };
+};
+
+/**
+ * @description Integra ofertas con los datos de referencia
+ * @param {Array} referenceData - Datos del archivo de referencia procesados
+ * @param {Array} offersData - Datos de ofertas procesados
+ * @returns {Object} Objeto con datos integrados y estadísticas
+ */
+export const integrateOffers = (referenceData, offersData) => {
+  if (!referenceData || !offersData || referenceData.length === 0 || offersData.length === 0) {
+    return { updatedData: [], stats: { total: 0, integrated: 0 } };
+  }
+  
+  // Crear una copia de los datos de referencia para no modificarlos directamente
+  const updatedData = [...referenceData];
+  
+  // Contador para ofertas integradas
+  let integratedCount = 0;
+  
+  // Crear un mapa para buscar productos por nombre/descripción
+  const productMap = new Map();
+  
+  // Primero, indexar los productos de referencia por nombre/descripción para búsqueda rápida
+  referenceData.forEach((item, index) => {
+    if (item.Droga) {
+      const normalizedName = item.Droga.toLowerCase().trim();
+      if (!productMap.has(normalizedName)) {
+        productMap.set(normalizedName, index);
+      }
+    }
+  });
+  
+  // Luego, procesar cada oferta
+  const newProducts = [];
+  
+  offersData.forEach(offer => {
+    const normalizedName = offer.Producto.toLowerCase().trim();
+    
+    // Buscar coincidencia en los datos de referencia
+    if (productMap.has(normalizedName)) {
+      // Si se encuentra coincidencia, actualizar el precio
+      const index = productMap.get(normalizedName);
+      const oldPrice = updatedData[index].PrecioAnterior || 0;
+      
+      updatedData[index] = {
+        ...updatedData[index],
+        PrecioActualizado: offer.Precio,
+        Diferencia: offer.Precio - oldPrice,
+        PorcentajeCambio: oldPrice && oldPrice !== 0
+          ? ((offer.Precio - oldPrice) / oldPrice * 100).toFixed(2) + '%'
+          : 'N/A',
+        PrecioCambio: Math.abs(offer.Precio - oldPrice) > 0.01
+      };
+      
+      integratedCount++;
+    } else {
+      // Si no se encuentra coincidencia, crear un nuevo producto
+      newProducts.push({
+        Codigo: `OF-${newProducts.length + 1}`, // Generar un código temporal
+        Droga: offer.Producto,
+        Marca: 'Oferta',
+        Mueble: offer.Mueble || 'NO',
+        PrecioAnterior: 0,
+        PrecioActualizado: offer.Precio,
+        Diferencia: offer.Precio,
+        PorcentajeCambio: 'N/A',
+        PrecioCambio: true,
+        EsOferta: true // Marcar como oferta para identificación posterior
+      });
+      
+      integratedCount++;
+    }
+  });
+  
+  // Agregar los nuevos productos a los datos actualizados
+  updatedData.push(...newProducts);
+  
+  // Estadísticas de integración
+  const stats = {
+    total: offersData.length,
+    integrated: integratedCount,
+    newProducts: newProducts.length,
+    updated: integratedCount - newProducts.length
   };
   
   return { updatedData, stats };

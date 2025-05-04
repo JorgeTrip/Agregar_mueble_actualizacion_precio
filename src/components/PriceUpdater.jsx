@@ -23,7 +23,13 @@ import FileDropZone from './PriceUpdater/FileDropZone';
 import ProductSearch from './PriceUpdater/ProductSearch';
 import FurnitureTable from './PriceUpdater/FurnitureTable';
 import FurnitureEditor from './PriceUpdater/FurnitureEditor';
-import { processReferenceFile, processUpdateFile, updatePrices } from './PriceUpdater/dataProcessors';
+import { 
+  processReferenceFile, 
+  processUpdateFile, 
+  updatePrices, 
+  processOffersFile,
+  integrateOffers 
+} from './PriceUpdater/dataProcessors';
 
 /**
  * @fileoverview Componente para actualizar precios en una planilla de referencia
@@ -39,6 +45,7 @@ const PriceUpdater = () => {
   // Estados para los archivos
   const [referenceFile, setReferenceFile] = useState(null);
   const [updateFile, setUpdateFile] = useState(null);
+  const [offersFile, setOffersFile] = useState(null);
   
   // Estados para los datos procesados
   const [referenceData, setReferenceData] = useState(null);
@@ -53,6 +60,7 @@ const PriceUpdater = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [isDraggingReference, setIsDraggingReference] = useState(false);
   const [isDraggingUpdate, setIsDraggingUpdate] = useState(false);
+  const [isDraggingOffers, setIsDraggingOffers] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   
@@ -315,11 +323,65 @@ const PriceUpdater = () => {
   }, [updatedData, furnitureGroups]);
 
   /**
+   * @description Maneja la carga del archivo de ofertas
+   * @param {File} file - Archivo Excel de ofertas
+   */
+  const handleOffersFileUpload = useCallback((file) => {
+    if (!referenceData) {
+      setError("Primero debe cargar el archivo de referencia");
+      return;
+    }
+    
+    setIsProcessing(true);
+    setError(null);
+    setInfo("Procesando archivo de ofertas...");
+    
+    const reader = new FileReader();
+    
+    reader.onload = (e) => {
+      try {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const firstSheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[firstSheetName];
+        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+        
+        if (jsonData.length < 2) {
+          throw new Error("El archivo de ofertas no contiene datos suficientes");
+        }
+        
+        // Procesar el archivo de ofertas
+        const processedOffers = processOffersFile(jsonData);
+        setOffersFile(file);
+        
+        // Integrar las ofertas con los datos de referencia
+        const { updatedData: integrated, stats } = integrateOffers(referenceData, processedOffers);
+        setUpdatedData(integrated);
+        
+        setInfo(`Ofertas integradas correctamente. Se procesaron ${stats.integrated} de ${stats.total} ofertas (${stats.newProducts} nuevos productos, ${stats.updated} actualizados).`);
+        setIsProcessing(false);
+      } catch (err) {
+        console.error("Error al procesar el archivo de ofertas:", err);
+        setError(`Error al procesar el archivo de ofertas: ${err.message}`);
+        setIsProcessing(false);
+      }
+    };
+    
+    reader.onerror = () => {
+      setError("Error al leer el archivo de ofertas");
+      setIsProcessing(false);
+    };
+    
+    reader.readAsArrayBuffer(file);
+  }, [referenceData]);
+
+  /**
    * @description Limpia todos los datos y archivos
    */
   const handleClear = useCallback(() => {
     setReferenceFile(null);
     setUpdateFile(null);
+    setOffersFile(null);
     setReferenceData(null);
     setUpdateData(null);
     setUpdatedData(null);
@@ -352,15 +414,33 @@ const PriceUpdater = () => {
             file={referenceFile}
           />
           
+          {referenceFile && !updateFile && !offersFile && (
+            <Typography variant="body1" sx={{ textAlign: 'center', color: 'text.secondary', my: 2 }}>
+              Seleccione una de las siguientes opciones para actualizar precios:
+            </Typography>
+          )}
+          
           <FileDropZone
             onDrop={handleUpdateFileUpload}
             isDragActive={isDraggingUpdate}
             setIsDragActive={setIsDraggingUpdate}
-            disabled={!referenceFile || !!updateFile || isProcessing}
+            disabled={!referenceFile || !!updateFile || !!offersFile || isProcessing}
             title="Cargar Planilla de Actualización (B)"
-            description="Arrastre aquí su planilla con los nuevos precios"
+            description="Arrastre aquí su planilla con los nuevos precios (con códigos)"
             icon={<UploadIcon sx={{ fontSize: 40 }} />}
             file={updateFile}
+          />
+          
+          <FileDropZone
+            onDrop={handleOffersFileUpload}
+            isDragActive={isDraggingOffers}
+            setIsDragActive={setIsDraggingOffers}
+            disabled={!referenceFile || !!updateFile || !!offersFile || isProcessing}
+            title="Cargar Planilla de Ofertas"
+            description="Arrastre aquí su planilla de ofertas (sin códigos)"
+            icon={<UploadIcon sx={{ fontSize: 40 }} color="secondary" />}
+            file={offersFile}
+            color="secondary"
           />
         </Stack>
       )}
