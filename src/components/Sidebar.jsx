@@ -181,7 +181,7 @@ function Sidebar({ onSelect, toggleTheme, themeMode }) {
           gap: isMobile ? '15px' : 0, // Espacio entre botones en móvil
         }}
       >
-        <Tooltip title="Agregar mueble a planilla de precios" arrow placement={isMobile ? "bottom" : "right"}>
+        <Tooltip title="Actualización de precios y de muebles" arrow placement={isMobile ? "bottom" : "right"}>
           <IconButton color="inherit" onClick={() => onSelect('home')} sx={{ my: isMobile ? 0 : 0.5 }}>
             <SpreadsheetIcon sx={{ fontSize: isMobile ? 25 : 40 }} />
           </IconButton>
