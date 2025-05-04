@@ -448,12 +448,17 @@ export const updatePrices = (referenceData, updateData) => {
       changedCount++;
     }
     
+    // Reorganizar las propiedades en el orden deseado
     return {
-      ...item,
-      PrecioActualizado: newPrice,
+      Codigo: item.Codigo,
+      Droga: item.Droga,
+      PrecioAnterior: item.PrecioAnterior,
+      Mueble: item.Mueble,
+      Marca: item.Marca,
       Diferencia: diferencia,
       PorcentajeCambio: porcentajeCambio,
-      PrecioCambio: priceChanged // Agregar un indicador de si el precio cambió
+      EsOferta: item.EsOferta || '',
+      PrecioActualizado: newPrice
     };
   });
   
@@ -515,7 +520,7 @@ export const integrateOffers = (referenceData, offersData) => {
         PorcentajeCambio: oldPrice && oldPrice !== 0
           ? ((offer.Precio - oldPrice) / oldPrice * 100).toFixed(2) + '%'
           : 'N/A',
-        PrecioCambio: Math.abs(offer.Precio - oldPrice) > 0.01
+        EsOferta: 'SI'
       };
       
       integratedCount++;
@@ -530,8 +535,7 @@ export const integrateOffers = (referenceData, offersData) => {
         PrecioActualizado: offer.Precio,
         Diferencia: offer.Precio,
         PorcentajeCambio: 'N/A',
-        PrecioCambio: true,
-        EsOferta: true // Marcar como oferta para identificación posterior
+        EsOferta: 'SI'
       });
       
       integratedCount++;

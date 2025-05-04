@@ -55,13 +55,15 @@ const FurnitureTable = ({ title, data, highlightTerm }) => {
   
   // Definir el orden específico de las columnas según la estructura de la planilla A
   const columnOrder = [
-    'Codigo',       // COD (B)
-    'Droga',        // DROGA (C)
-    'Marca',        // MARCA (D)
-    'PrecioAnterior', // PVP anterior (E)
-    'PrecioActualizado', // Nuevo precio
-    'Diferencia',   // Diferencia entre precios
-    'PorcentajeCambio' // Porcentaje de cambio
+    'Codigo',         // COD (A)
+    'Droga',          // DROGA (B)
+    'PrecioAnterior', // PrecioAnterior (C)
+    'Mueble',         // Mueble (D)
+    'Marca',          // MARCA (E)
+    'Diferencia',     // Diferencia (F)
+    'PorcentajeCambio', // PorcentajeCambio (G)
+    'EsOferta',       // EsOferta (H)
+    'PrecioActualizado' // PrecioActualizado (I)
   ];
   
   // Filtrar columnas no deseadas y ordenarlas según el orden definido

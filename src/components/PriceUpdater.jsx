@@ -293,13 +293,39 @@ const PriceUpdater = () => {
     try {
       const fileName = `Precios_Actualizados_${new Date().toISOString().split('T')[0]}`;
       
+      // Definir el orden de las columnas para la exportación
+      const columnOrder = [
+        'Codigo',
+        'Droga',
+        'PrecioAnterior',
+        'Mueble',
+        'Marca',
+        'Diferencia',
+        'PorcentajeCambio',
+        'EsOferta',
+        'PrecioActualizado'
+      ];
+      
+      // Función para ordenar las columnas en el orden deseado
+      const orderColumns = (data) => {
+        return data.map(item => {
+          const orderedItem = {};
+          columnOrder.forEach(col => {
+            orderedItem[col] = item[col] !== undefined ? item[col] : '';
+          });
+          return orderedItem;
+        });
+      };
+      
       if (byFurniture) {
         // Crear un libro con una hoja por mueble
         // Excluir productos con mueble "NO"
         const wb = XLSX.utils.book_new();
         
         furnitureGroups.forEach(([furniture, items]) => {
-          const ws = XLSX.utils.json_to_sheet(items);
+          // Ordenar las columnas antes de crear la hoja
+          const orderedItems = orderColumns(items);
+          const ws = XLSX.utils.json_to_sheet(orderedItems);
           const safeFurnitureName = furniture.replace(/[\/\?\*\[\]]/g, '_').substring(0, 30);
           XLSX.utils.book_append_sheet(wb, ws, safeFurnitureName);
         });
@@ -308,7 +334,9 @@ const PriceUpdater = () => {
         saveAs(new Blob([wbout], { type: 'application/octet-stream' }), `${fileName}_por_mueble.${format}`);
       } else {
         // Crear un libro con todos los datos en una sola hoja (incluidos los "NO")
-        const ws = XLSX.utils.json_to_sheet(updatedData);
+        // Ordenar las columnas antes de crear la hoja
+        const orderedData = orderColumns(updatedData);
+        const ws = XLSX.utils.json_to_sheet(orderedData);
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "Precios Actualizados");
         
