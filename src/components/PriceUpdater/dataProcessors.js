@@ -431,14 +431,22 @@ export const updatePrices = (referenceData, updateData) => {
     // Normalizar el código para la comparación
     const normalizedCode = item.Codigo ? item.Codigo.toString().trim() : '';
     
-    // Buscar el precio actualizado
-    const newPrice = priceMap.has(normalizedCode) ? priceMap.get(normalizedCode) : item.PrecioAnterior;
+    // Verificar si hay un precio actualizado para este producto
+    const hasNewPrice = priceMap.has(normalizedCode);
+    
+    // Obtener el precio actualizado o usar el anterior si no hay actualización
+    const newPrice = hasNewPrice ? priceMap.get(normalizedCode) : item.PrecioAnterior;
     
     // Calcular la diferencia y el porcentaje de cambio
-    const diferencia = newPrice - (item.PrecioAnterior || 0);
-    const porcentajeCambio = item.PrecioAnterior && item.PrecioAnterior !== 0
-      ? ((newPrice - item.PrecioAnterior) / item.PrecioAnterior * 100).toFixed(2) + '%'
-      : 'N/A';
+    let diferencia = 0;
+    let porcentajeCambio = '0%';
+    
+    if (hasNewPrice) {
+      diferencia = newPrice - (item.PrecioAnterior || 0);
+      porcentajeCambio = item.PrecioAnterior && item.PrecioAnterior !== 0
+        ? ((newPrice - item.PrecioAnterior) / item.PrecioAnterior * 100).toFixed(2) + '%'
+        : 'N/A';
+    }
     
     // Verificar si el precio realmente cambió
     const priceChanged = Math.abs(diferencia) > 0.01; // Usar una pequeña tolerancia para evitar problemas de redondeo
