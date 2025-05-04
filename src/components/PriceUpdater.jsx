@@ -1,17 +1,19 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { 
   Box, 
   Typography, 
   Button, 
   Alert,
   Stack,
-  Paper
+  Paper,
+  Divider
 } from '@mui/material';
 import { 
   Upload as UploadIcon, 
   Download as DownloadIcon,
   Search as SearchIcon,
-  CloudDownload as CloudDownloadIcon
+  CloudDownload as CloudDownloadIcon,
+  Edit as EditIcon
 } from '@mui/icons-material';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
@@ -20,6 +22,7 @@ import { saveAs } from 'file-saver';
 import FileDropZone from './PriceUpdater/FileDropZone';
 import ProductSearch from './PriceUpdater/ProductSearch';
 import FurnitureTable from './PriceUpdater/FurnitureTable';
+import FurnitureEditor from './PriceUpdater/FurnitureEditor';
 import { processReferenceFile, processUpdateFile, updatePrices } from './PriceUpdater/dataProcessors';
 
 /**
@@ -41,6 +44,8 @@ const PriceUpdater = () => {
   const [referenceData, setReferenceData] = useState(null);
   const [updateData, setUpdateData] = useState(null);
   const [updatedData, setUpdatedData] = useState(null);
+  const [productsWithoutFurniture, setProductsWithoutFurniture] = useState([]);
+  const [availableFurnitures, setAvailableFurnitures] = useState([]);
   
   // Estados para la interfaz
   const [error, setError] = useState(null);
@@ -51,15 +56,36 @@ const PriceUpdater = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   
+  // Identificar productos sin mueble o con mueble "NO"
+  useEffect(() => {
+    if (updatedData) {
+      const withoutFurniture = updatedData.filter(item => 
+        !item.Mueble || item.Mueble === 'NO' || item.Mueble === 'Sin mueble'
+      );
+      setProductsWithoutFurniture(withoutFurniture);
+      
+      // Extraer muebles únicos para sugerencias
+      const furnitures = [...new Set(
+        updatedData
+          .map(item => item.Mueble)
+          .filter(mueble => mueble && mueble !== 'NO' && mueble !== 'Sin mueble')
+      )];
+      setAvailableFurnitures(furnitures);
+    }
+  }, [updatedData]);
+  
   // Agrupar datos por mueble para mostrar en tablas separadas
+  // Excluir productos con mueble "NO" de las tablas por mueble
   const furnitureGroups = updatedData ? 
     Object.entries(
-      updatedData.reduce((groups, item) => {
-        const furniture = item.Mueble || 'Sin mueble asignado';
-        if (!groups[furniture]) groups[furniture] = [];
-        groups[furniture].push(item);
-        return groups;
-      }, {})
+      updatedData
+        .filter(item => item.Mueble && item.Mueble !== 'NO')
+        .reduce((groups, item) => {
+          const furniture = item.Mueble || 'Sin mueble asignado';
+          if (!groups[furniture]) groups[furniture] = [];
+          groups[furniture].push(item);
+          return groups;
+        }, {})
     ) : [];
 
   /**
@@ -179,6 +205,31 @@ const PriceUpdater = () => {
   }, [updatedData]);
 
   /**
+   * @description Maneja la actualización de muebles de productos
+   * @param {Array} updatedProducts - Productos con muebles actualizados
+   */
+  const handleFurnitureUpdate = useCallback((updatedProducts) => {
+    if (!updatedData) return;
+    
+    // Crear un mapa para buscar productos por código rápidamente
+    const productMap = new Map();
+    updatedProducts.forEach(product => {
+      productMap.set(product.Codigo, product.Mueble);
+    });
+    
+    // Actualizar los muebles en todos los datos
+    const newUpdatedData = updatedData.map(item => {
+      if (productMap.has(item.Codigo)) {
+        return { ...item, Mueble: productMap.get(item.Codigo) };
+      }
+      return item;
+    });
+    
+    setUpdatedData(newUpdatedData);
+    setInfo("Muebles actualizados correctamente");
+  }, [updatedData]);
+
+  /**
    * @description Descarga los datos actualizados como archivo Excel
    * @param {string} format - Formato del archivo (xlsx, xls, csv)
    * @param {boolean} byFurniture - Indica si se debe separar por mueble
@@ -194,18 +245,19 @@ const PriceUpdater = () => {
       
       if (byFurniture) {
         // Crear un libro con una hoja por mueble
+        // Excluir productos con mueble "NO"
         const wb = XLSX.utils.book_new();
         
         furnitureGroups.forEach(([furniture, items]) => {
           const ws = XLSX.utils.json_to_sheet(items);
-          const safeFurnitureName = furniture.replace(/[\\\/\?\*\[\]]/g, '_').substring(0, 30);
+          const safeFurnitureName = furniture.replace(/[\/\?\*\[\]]/g, '_').substring(0, 30);
           XLSX.utils.book_append_sheet(wb, ws, safeFurnitureName);
         });
         
         const wbout = XLSX.write(wb, { bookType: format, type: 'array' });
         saveAs(new Blob([wbout], { type: 'application/octet-stream' }), `${fileName}_por_mueble.${format}`);
       } else {
-        // Crear un libro con todos los datos en una sola hoja
+        // Crear un libro con todos los datos en una sola hoja (incluidos los "NO")
         const ws = XLSX.utils.json_to_sheet(updatedData);
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "Precios Actualizados");
@@ -284,6 +336,15 @@ const PriceUpdater = () => {
         </Alert>
       )}
       
+      {/* Editor de muebles para productos sin mueble asignado o con mueble "NO" */}
+      {updatedData && productsWithoutFurniture.length > 0 && (
+        <FurnitureEditor 
+          products={productsWithoutFurniture} 
+          onSave={handleFurnitureUpdate}
+          availableFurnitures={availableFurnitures}
+        />
+      )}
+
       {/* Búsqueda de productos y resultados */}
       {updatedData && (
         <Box sx={{ mb: 4 }}>
@@ -309,6 +370,23 @@ const PriceUpdater = () => {
         </Box>
       )}
       
+      {/* Tablas por mueble */}
+      {updatedData && !searchTerm && (
+        <Box sx={{ mt: 4, mb: 4 }}>
+          <Typography variant="h5" gutterBottom>
+            Productos por mueble ({updatedData.filter(item => item.Mueble && item.Mueble !== 'NO').length} productos en {furnitureGroups.length} muebles)
+          </Typography>
+          
+          {furnitureGroups.map(([furniture, items]) => (
+            <FurnitureTable 
+              key={furniture}
+              title={furniture}
+              data={items}
+            />
+          ))}
+        </Box>
+      )}
+
       {/* Botones de descarga */}
       {updatedData && (
         <Stack 
@@ -342,23 +420,6 @@ const PriceUpdater = () => {
             Volver a empezar
           </Button>
         </Stack>
-      )}
-      
-      {/* Tablas por mueble */}
-      {updatedData && searchResults.length === 0 && (
-        <Box>
-          <Typography variant="h5" gutterBottom sx={{ mt: 4, mb: 2 }}>
-            Precios actualizados por mueble
-          </Typography>
-          
-          {furnitureGroups.map(([furniture, items]) => (
-            <FurnitureTable 
-              key={furniture} 
-              title={furniture} 
-              data={items} 
-            />
-          ))}
-        </Box>
       )}
     </Box>
   );
