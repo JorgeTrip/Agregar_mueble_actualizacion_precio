@@ -291,9 +291,10 @@ const PriceUpdater = () => {
     }
     
     try {
-      const fileName = `Precios_Actualizados_${new Date().toISOString().split('T')[0]}`;
+      // Obtener la fecha actual en formato AAAA-MM-DD
+      const currentDate = new Date().toISOString().split('T')[0];
       
-      // Definir el orden de las columnas para la exportación
+      // Definir el orden de las columnas para la planilla de referencia
       const columnOrder = [
         'Codigo',
         'Droga',
@@ -318,20 +319,99 @@ const PriceUpdater = () => {
       };
       
       if (byFurniture) {
-        // Crear un libro con una hoja por mueble
-        // Excluir productos con mueble "NO"
+        // Crear un libro con una hoja por mueble para imprimir
         const wb = XLSX.utils.book_new();
         
+        // Configuración para formato de impresión
+        const printOptions = {
+          // Configuración para página A4 (ancho: 210mm, alto: 297mm)
+          'fitToPage': true,
+          'fitToHeight': 0,
+          'fitToWidth': 1,
+          'paperSize': 9, // A4
+          'orientation': 'portrait',
+          'horizontalDpi': 300,
+          'verticalDpi': 300,
+          'pageMargins': { 'left': 0.7, 'right': 0.7, 'top': 0.75, 'bottom': 0.75, 'header': 0.3, 'footer': 0.3 }
+        };
+        
         furnitureGroups.forEach(([furniture, items]) => {
-          // Ordenar las columnas antes de crear la hoja
-          const orderedItems = orderColumns(items);
-          const ws = XLSX.utils.json_to_sheet(orderedItems);
+          // Crear un array para los datos con espacio para el título
+          const printData = [];
+          
+          // Agregar título del mueble como primera fila
+          printData.push({
+            'Droga': furniture.toUpperCase(),
+            'Marca': '',
+            'Precio': ''
+          });
+          
+          // Agregar una fila vacía después del título
+          printData.push({
+            'Droga': '',
+            'Marca': '',
+            'Precio': ''
+          });
+          
+          // Agregar los productos
+          items.forEach((item, index) => {
+            printData.push({
+              'Droga': item.Droga,
+              'Marca': item.Marca,
+              'Precio': item.PrecioActualizado
+            });
+          });
+          
+          // Crear la hoja
+          const ws = XLSX.utils.json_to_sheet(printData);
+          
+          // Configurar ancho de columnas (en caracteres)
+          ws['!cols'] = [
+            { wch: 40 }, // Droga - columna ancha
+            { wch: 25 }, // Marca - columna media
+            { wch: 12 }  // Precio - columna estrecha
+          ];
+          
+          // Aplicar estilos a las celdas
+          const range = XLSX.utils.decode_range(ws['!ref']);
+          
+          // Objeto para almacenar los estilos de las celdas
+          if (!ws['!styles']) ws['!styles'] = {};
+          
+          // Estilo para el título (primera fila)
+          ws['!styles']['A1'] = { font: { bold: true, size: 16 }, alignment: { horizontal: 'center' } };
+          ws['!styles']['B1'] = { font: { bold: true, size: 16 }, alignment: { horizontal: 'center' } };
+          ws['!styles']['C1'] = { font: { bold: true, size: 16 }, alignment: { horizontal: 'center' } };
+          
+          // Estilo para los encabezados (tercera fila)
+          ws['!styles']['A3'] = { font: { bold: true }, fill: { fgColor: { rgb: 'DDDDDD' } } };
+          ws['!styles']['B3'] = { font: { bold: true }, fill: { fgColor: { rgb: 'DDDDDD' } } };
+          ws['!styles']['C3'] = { font: { bold: true }, fill: { fgColor: { rgb: 'DDDDDD' } } };
+          
+          // Estilos alternados para las filas de datos
+          for (let i = 4; i <= range.e.r; i++) {
+            const fillColor = i % 2 === 0 ? 'FFFFFF' : 'F5F5F5';
+            ws['!styles'][`A${i}`] = { fill: { fgColor: { rgb: fillColor } } };
+            ws['!styles'][`B${i}`] = { fill: { fgColor: { rgb: fillColor } } };
+            ws['!styles'][`C${i}`] = { fill: { fgColor: { rgb: fillColor } }, alignment: { horizontal: 'right' } };
+          }
+          
+          // Nombre seguro para la hoja
           const safeFurnitureName = furniture.replace(/[\/\?\*\[\]]/g, '_').substring(0, 30);
+          
+          // Configurar opciones de impresión
+          ws['!printHeader'] = [3, 3]; // Repetir la tercera fila como encabezado
+          ws['!pageSetup'] = printOptions;
+          
+          // Agregar la hoja al libro
           XLSX.utils.book_append_sheet(wb, ws, safeFurnitureName);
         });
         
+        // Guardar el archivo
         const wbout = XLSX.write(wb, { bookType: format, type: 'array' });
-        saveAs(new Blob([wbout], { type: 'application/octet-stream' }), `${fileName}_por_mueble.${format}`);
+        saveAs(new Blob([wbout], { type: 'application/octet-stream' }), `${currentDate}_Precios_para_imprimir.${format}`);
+        
+        setInfo(`Archivo para impresión descargado correctamente en formato ${format.toUpperCase()}`);
       } else {
         // Crear un libro con todos los datos en una sola hoja (incluidos los "NO")
         // Ordenar las columnas antes de crear la hoja
@@ -341,10 +421,10 @@ const PriceUpdater = () => {
         XLSX.utils.book_append_sheet(wb, ws, "Precios Actualizados");
         
         const wbout = XLSX.write(wb, { bookType: format, type: 'array' });
-        saveAs(new Blob([wbout], { type: 'application/octet-stream' }), `${fileName}.${format}`);
+        saveAs(new Blob([wbout], { type: 'application/octet-stream' }), `${currentDate}_Referencia_precios.${format}`);
+        
+        setInfo(`Archivo de referencia descargado correctamente en formato ${format.toUpperCase()}`);
       }
-      
-      setInfo(`Archivo descargado correctamente en formato ${format.toUpperCase()}`);
     } catch (err) {
       setError(`Error al descargar el archivo: ${err.message}`);
     }
