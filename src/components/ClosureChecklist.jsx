@@ -9,15 +9,27 @@ import {
   ListItemText, 
   Paper,
   Divider,
-  Button
+  Button,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Tabs,
+  Tab,
+  AppBar,
+  Card,
+  CardContent
 } from '@mui/material';
 import { saveAs } from 'file-saver';
-import { useRef, useEffect } from 'react';
+import { useRef } from 'react';
+import { Upload as UploadIcon, Description as DescriptionIcon } from '@mui/icons-material';
 
 /**
  * @fileoverview Componente para gestionar el checklist de cierre de caja de una farmacia
  * @author J.O.T.
- * @version 1.0.0
+ * @version 2.0.0
  */
 
 /**
@@ -40,18 +52,56 @@ const predefinedItems = [
 ];
 
 /**
+ * @description Mapeo de conceptos de Sinergie a los nombres de la planilla
+ * @type {Object.<string, string>}
+ */
+const sinergieToPlanillaMap = {
+  'EFECTIVO': 'Efectivo',
+  'TARJETAS': 'Tarjetas',
+  'MERCADOPAGO': 'Mercado Pago',
+  'PEDIDOSYA': 'Pedidos Ya',
+  'RAPPI': 'Rappi',
+  'TRANSFERENCIA': 'Transferencia',
+  'CHEQUE': 'Cheque',
+  'OTROS': 'Otros'
+};
+
+/**
+ * @description Mapeo de turnos
+ * @type {Object.<string, string>}
+ */
+const turnosMap = {
+  'TURNO 1': 'Turno Mañana',
+  'TURNO 2': 'Turno Tarde',
+  'TURNO 3': 'Turno Noche'
+};
+
+/**
  * @description Componente principal que gestiona el checklist de cierre
  * @returns {JSX.Element} Componente de checklist de cierre
  */
 function ClosureChecklist() {
+  // Estado para la pestaña activa
+  const [activeTab, setActiveTab] = useState(0);
+  
   /** @type {[{name: string, amount: string, formattedAmount: string}[], Function]} Estado para almacenar los items del checklist */
   const [items, setItems] = useState(
     predefinedItems.map(name => ({ name, amount: '', formattedAmount: '' }))
   );
+  
   /** @type {[{name: string, amount: string, formattedAmount: string}, Function]} Estado para el nuevo item que se está ingresando */
   const [newItem, setNewItem] = useState({ name: '', amount: '', formattedAmount: '' });
+  
   /** @type {React.MutableRefObject<HTMLInputElement[]>} Referencias a los campos de entrada para navegación con teclado */
   const inputRefs = useRef([]);
+  
+  // Estado para los datos de Sinergie
+  const [sinergieData, setSinergieData] = useState({
+    turno: '',
+    fecha: new Date().toLocaleDateString(),
+    hora: new Date().toLocaleTimeString(),
+    cajero: ''
+  });
 
   /**
    * @description Formatea un valor numérico a formato de moneda argentina
@@ -304,118 +354,536 @@ function ClosureChecklist() {
     }
   };
 
+  /**
+   * @description Maneja el cambio de pestaña
+   * @param {React.SyntheticEvent} event - Evento de cambio de pestaña
+   * @param {number} newValue - Índice de la nueva pestaña seleccionada
+   */
+  const handleTabChange = (event, newValue) => {
+    setActiveTab(newValue);
+  };
+  
+  /**
+   * @description Procesa el archivo de Sinergie cargado
+   * @param {Event} event - Evento de cambio del input de archivo
+   */
+  const handleFileUpload = (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const content = e.target.result;
+        const lines = content.split('\n');
+        
+        // Buscar información del turno, fecha, hora y cajero
+        let turno = '';
+        let fecha = '';
+        let hora = '';
+        let cajero = '';
+        let totales = {};
+        
+        // Patrones para buscar en el archivo
+        const turnoPattern = /TURNO\s*\d+/i;
+        const fechaHoraPattern = /(\d{2}\/\d{2}\/\d{4})\s+(\d{2}:\d{2}:\d{2})/;
+        const cajeroPattern = /CAJERO\s*:\s*(.+)/i;
+        const totalPattern = /^([A-Z\s]+)\s+([\d.,]+)$/i;
+        
+        lines.forEach(line => {
+          // Buscar turno
+          if (turnoPattern.test(line)) {
+            const match = line.match(turnoPattern);
+            if (match) turno = match[0].toUpperCase();
+          }
+          
+          // Buscar fecha y hora
+          const fechaHoraMatch = line.match(fechaHoraPattern);
+          if (fechaHoraMatch) {
+            fecha = fechaHoraMatch[1];
+            hora = fechaHoraMatch[2];
+          }
+          
+          // Buscar cajero
+          const cajeroMatch = line.match(cajeroPattern);
+          if (cajeroMatch) {
+            cajero = cajeroMatch[1].trim();
+          }
+          
+          // Buscar totales
+          const totalMatch = line.match(totalPattern);
+          if (totalMatch) {
+            const concepto = totalMatch[1].trim().toUpperCase();
+            const monto = totalMatch[2].replace(/\./g, '').replace(',', '.');
+            
+            // Mapear el concepto de Sinergie al formato de la planilla
+            const conceptoMapeado = Object.keys(sinergieToPlanillaMap).find(
+              key => concepto.includes(key)
+            );
+            
+            if (conceptoMapeado) {
+              totales[sinergieToPlanillaMap[conceptoMapeado]] = parseFloat(monto);
+            }
+          }
+        });
+        
+        // Actualizar el estado con los datos extraídos
+        setSinergieData({
+          turno: turnosMap[turno] || turno,
+          fecha,
+          hora,
+          cajero,
+          totales
+        });
+        
+        // Actualizar los items con los totales encontrados
+        const updatedItems = items.map(item => {
+          if (item.name in totales) {
+            const amount = totales[item.name].toString();
+            return {
+              ...item,
+              amount,
+              formattedAmount: formatARS(parseFloat(amount))
+            };
+          }
+          return item;
+        });
+        
+        setItems(updatedItems);
+        setFileLoaded(true);
+        setActiveTab(1); // Cambiar a la pestaña de planilla
+        
+      } catch (error) {
+        console.error('Error al procesar el archivo:', error);
+        alert('Error al procesar el archivo. Asegúrate de que sea un archivo de Sinergie válido.');
+      }
+    };
+    
+    reader.readAsText(file);
+  };
+  
+  /**
+   * @description Renderiza la vista de carga de archivo
+   * @returns {JSX.Element} Componente de carga de archivo
+   */
+  const renderFileUpload = () => (
+    <Box sx={{ 
+      display: 'flex', 
+      flexDirection: 'column', 
+      alignItems: 'center', 
+      justifyContent: 'center', 
+      p: 4,
+      border: '2px dashed #90caf9',
+      borderRadius: 2,
+      textAlign: 'center',
+      minHeight: '200px',
+      backgroundColor: 'rgba(144, 202, 249, 0.05)'
+    }}>
+      <input
+        accept=".txt"
+        style={{ display: 'none' }}
+        id="sinergie-file-upload"
+        type="file"
+        onChange={handleFileUpload}
+      />
+      <label htmlFor="sinergie-file-upload">
+        <Button
+          variant="contained"
+          component="span"
+          startIcon={<UploadIcon />}
+          sx={{ mb: 2 }}
+        >
+          Seleccionar archivo de Sinergie
+        </Button>
+      </label>
+      <Typography variant="body1" color="textSecondary">
+        Arrastra y suelta un archivo de cierre de Sinergie aquí, o haz clic para seleccionar
+      </Typography>
+      <Typography variant="caption" color="textSecondary" sx={{ mt: 1 }}>
+        Formato soportado: .txt (exportado desde Sinergie)
+      </Typography>
+    </Box>
+  );
+  
+  /**
+   * @description Renderiza la planilla de papel con los datos cargados
+   * @returns {JSX.Element} Componente de planilla de papel
+   */
+  const renderPlanilla = () => (
+    <Box sx={{ mt: 2 }}>
+      <Card variant="outlined" sx={{ mb: 3, backgroundColor: '#fffde7' }}>
+        <CardContent>
+          <Box sx={{ mb: 3, textAlign: 'center' }}>
+            <Typography variant="h5" component="h2" gutterBottom sx={{ fontWeight: 'bold' }}>
+              PLANILLA DE CIERRE DE CAJA
+            </Typography>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+              <Typography variant="body1">
+                <strong>FECHA:</strong> {sinergieData.fecha || '__________'}
+              </Typography>
+              <Typography variant="body1">
+                <strong>TURNO:</strong> {sinergieData.turno || '__________'}
+              </Typography>
+              <Typography variant="body1">
+                <strong>HORA:</strong> {sinergieData.hora || '__________'}
+              </Typography>
+            </Box>
+            <Typography variant="body1" align="left" sx={{ mb: 2 }}>
+              <strong>CAJERO/A:</strong> {sinergieData.cajero || '__________'}
+            </Typography>
+          </Box>
+          
+          <TableContainer>
+            <Table size="small" sx={{ border: '1px solid #e0e0e0' }}>
+              <TableHead>
+                <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
+                  <TableCell sx={{ fontWeight: 'bold', border: '1px solid #e0e0e0' }}>CONCEPTO</TableCell>
+                  <TableCell align="right" sx={{ fontWeight: 'bold', border: '1px solid #e0e0e0' }}>IMPORTE</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {items.map((item, index) => (
+                  <TableRow key={index}>
+                    <TableCell sx={{ border: '1px solid #e0e0e0' }}>{item.name}</TableCell>
+                    <TableCell align="right" sx={{ border: '1px solid #e0e0e0' }}>
+                      {item.formattedAmount ? `$${item.formattedAmount}` : '__________'}
+                    </TableCell>
+                  </TableRow>
+                ))}
+                <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
+                  <TableCell sx={{ fontWeight: 'bold', border: '1px solid #e0e0e0' }}>TOTAL</TableCell>
+                  <TableCell align="right" sx={{ fontWeight: 'bold', border: '1px solid #e0e0e0' }}>
+                    ${formatARS(total)}
+                  </TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </TableContainer>
+          
+          <Box sx={{ mt: 3, display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap' }}>
+            <Box sx={{ mt: 2, width: '48%' }}>
+              <Typography variant="body2" sx={{ mb: 1 }}>
+                <strong>OBSERVACIONES:</strong>
+              </Typography>
+              <Box sx={{ border: '1px solid #e0e0e0', minHeight: '80px', p: 1 }}>
+                {sinergieData.observaciones || '________________________________________________________________'}
+              </Box>
+            </Box>
+            <Box sx={{ mt: 2, width: '48%' }}>
+              <Typography variant="body2" sx={{ mb: 1 }}>
+                <strong>FIRMA RESPONSABLE:</strong>
+              </Typography>
+              <Box sx={{ borderBottom: '1px solid #000', minHeight: '30px', mb: 2 }}></Box>
+              <Typography variant="body2" align="center">
+                Aclaración y Firma
+              </Typography>
+            </Box>
+          </Box>
+        </CardContent>
+      </Card>
+      
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
+        <Button 
+          variant="outlined" 
+          onClick={() => setActiveTab(0)}
+          startIcon={<DescriptionIcon />}
+        >
+          Volver a cargar archivo
+        </Button>
+        <Button 
+          variant="contained" 
+          color="primary" 
+          onClick={handleSaveToFile}
+          disabled={!fileLoaded}
+        >
+          Guardar Planilla
+        </Button>
+      </Box>
+    </Box>
+  );
+
   return (
     <Box sx={{
       p: 3, 
-      width: '900px', 
+      width: '1000px', 
+      maxWidth: '100%',
       boxSizing: 'border-box',
-      overflowX: 'hidden',
-      // Agrego manejo de ancho en pantallas pequeñas:
-      '@media (max-width: 600px)': {
-        width: '100%',
-        p: 2
-      }
+      mx: 'auto'
     }}>
-      <Typography variant="h4" component="h1" gutterBottom sx={{ color: '#90caf9', fontWeight: 'bold', textAlign: 'center', mb: 2 }}>
-        Checklist de Cierre
+      <Typography variant="h4" component="h1" gutterBottom sx={{ 
+        color: '#90caf9', 
+        fontWeight: 'bold', 
+        textAlign: 'center', 
+        mb: 2 
+      }}>
+        Checklist de Cierre de Caja
       </Typography>
-      <Typography variant="subtitle1" sx={{ color: '#f48fb1', fontStyle: 'italic', letterSpacing: '0.1em', textAlign: 'center', mb: 4 }}>
       
-      </Typography>
+      <AppBar position="static" color="default" sx={{ mb: 3, borderRadius: 1, overflow: 'hidden' }}>
+        <Tabs
+          value={activeTab}
+          onChange={handleTabChange}
+          indicatorColor="primary"
+          textColor="primary"
+          variant="fullWidth"
+        >
+          <Tab label="Carga desde Sinergie" />
+          <Tab label="Planilla de Cierre" />
+        </Tabs>
+      </AppBar>
 
-      <Grid container spacing={3}>
-        <Grid item xs={12} md={6}>
-          <Paper sx={{ p: 2 }}>
+      {activeTab === 0 && (
+        <Grid item xs={12}>
+          <Paper sx={{ p: 2, mb: 3 }}>
             <Typography variant="h6" gutterBottom>
-              Items Predefinidos
+              Datos del Turno
             </Typography>
-            <List dense>
-              {items.map((item, index) => (
-                <ListItem key={index}>
-                  <Grid container spacing={2} alignItems="center">
-                    <Grid item xs={6}>
-                      <ListItemText primary={item.name} />
-                    </Grid>
-                    <Grid item xs={6}>
-                      <TextField
-                        fullWidth
-                        label="Monto"
-                        value={item.formattedAmount}
-                        onChange={(e) => updateItemAmount(index, e.target.value)}
-                        onKeyPress={(e) => handleKeyPress(index, e)}
-                        inputRef={(el) => (inputRefs.current[index] = el)}
-                        InputProps={{
-                          inputProps: { inputMode: 'decimal' },
-                          startAdornment: item.formattedAmount ? '$' : null
-                        }}
-                      />
-                    </Grid>
-                  </Grid>
-                </ListItem>
-              ))}
-            </List>
-          </Paper>
-        </Grid>
-
-        <Grid item xs={12} md={6}>
-          <Paper sx={{ p: 2 }}>
-            <Typography variant="h6" gutterBottom>
-              Agregar otro concepto
-            </Typography>
-            <Grid container spacing={2}>
-              <Grid item xs={6}>
+            <Grid container spacing={2} sx={{ mb: 3 }}>
+              <Grid item xs={12} md={3}>
                 <TextField
                   fullWidth
-                  label="Nombre"
-                  value={newItem.name}
-                  onChange={(e) => setNewItem(prev => ({ ...prev, name: e.target.value }))}
-                  onKeyPress={handleAddCustom}
-                />
+                  label="Turno"
+                  value={sinergieData.turno}
+                  onChange={(e) => setSinergieData(prev => ({ ...prev, turno: e.target.value }))}
+                  select
+                  SelectProps={{ native: true }}
+                >
+                  <option value="">Seleccionar turno</option>
+                  <option value="Turno Mañana">Turno Mañana</option>
+                  <option value="Turno Tarde">Turno Tarde</option>
+                  <option value="Turno Noche">Turno Noche</option>
+                </TextField>
               </Grid>
-              <Grid item xs={6}>
+              <Grid item xs={12} md={3}>
                 <TextField
                   fullWidth
-                  label="Monto"
-                  value={newItem.formattedAmount}
-                  onChange={(e) => handleNewItemFormattedChange(e.target.value, newItem.formattedAmount)}
-                  onKeyPress={handleAddCustom}
-                  InputProps={{
-                    inputProps: { inputMode: 'decimal' },
-                    startAdornment: newItem.formattedAmount ? '$' : null
+                  type="date"
+                  label="Fecha"
+                  value={sinergieData.fecha}
+                  onChange={(e) => setSinergieData(prev => ({ ...prev, fecha: e.target.value }))}
+                  InputLabelProps={{
+                    shrink: true,
                   }}
                 />
               </Grid>
+              <Grid item xs={12} md={3}>
+                <TextField
+                  fullWidth
+                  type="time"
+                  label="Hora"
+                  value={sinergieData.hora}
+                  onChange={(e) => setSinergieData(prev => ({ ...prev, hora: e.target.value }))}
+                  InputLabelProps={{
+                    shrink: true,
+                  }}
+                />
+              </Grid>
+              <Grid item xs={12} md={3}>
+                <TextField
+                  fullWidth
+                  label="Cajero/a"
+                  value={sinergieData.cajero}
+                  onChange={(e) => setSinergieData(prev => ({ ...prev, cajero: e.target.value }))}
+                />
+              </Grid>
             </Grid>
-
-            <Box sx={{ display: 'flex', gap: 2, mt: 3 }}>
-              <Button
-                variant="contained"
-                color="error"
-                onClick={handleClearAll}
-                sx={{ flex: 1 }}
-              >
-                Borrar Todo
-              </Button>
-              <Button
-                variant="contained"
-                color="success"
-                onClick={handleSaveToFile}
-                sx={{ flex: 1 }}
-              >
-                Guardar
-              </Button>
-            </Box>
-
-            <Divider sx={{ my: 3 }} />
-
+            
             <Typography variant="h6" gutterBottom>
-              Total General: ${formatARS(total)}
+              Ingresar Valores
             </Typography>
+            
+            <List>
+              {items.map((item, index) => (
+                <React.Fragment key={index}>
+                  <ListItem>
+                    <ListItemText primary={item.name} />
+                    <TextField
+                      variant="outlined"
+                      size="small"
+                      type="text"
+                      value={item.formattedAmount}
+                      onChange={(e) => handleFormattedChange(e, index)}
+                      onKeyDown={(e) => handleKeyDown(e, index)}
+                      inputRef={el => inputRefs.current[index] = el}
+                      sx={{ width: '150px' }}
+                      inputProps={{
+                        style: { textAlign: 'right' },
+                        inputMode: 'decimal'
+                      }}
+                    />
+                  </ListItem>
+                  <Divider />
+                </React.Fragment>
+              ))}
+            </List>
+            
+            <Box sx={{ mt: 3 }}>
+              <Typography variant="subtitle1" gutterBottom>
+                Agregar Concepto Personalizado
+              </Typography>
+              <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+                <TextField
+                  fullWidth
+                  label="Concepto"
+                  value={newItem.name}
+                  onChange={(e) => setNewItem({ ...newItem, name: e.target.value })}
+                  onKeyDown={handleNewItemKeyDown}
+                />
+                <TextField
+                  label="Monto"
+                  value={newItem.formattedAmount}
+                  onChange={handleNewItemAmountChange}
+                  onKeyDown={handleNewItemKeyDown}
+                  sx={{ width: '150px' }}
+                  inputProps={{
+                    style: { textAlign: 'right' },
+                    inputMode: 'decimal'
+                  }}
+                />
+                <Button 
+                  variant="outlined" 
+                  onClick={handleAddItem}
+                  disabled={!newItem.name || !newItem.amount}
+                >
+                  Agregar
+                </Button>
+              </Box>
+            </Box>
+            
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4, pt: 2, borderTop: '1px solid #e0e0e0' }}>
+              <Button 
+                variant="outlined" 
+                color="error"
+                onClick={handleResetForm}
+              >
+                Limpiar Todo
+              </Button>
+              <Box sx={{ display: 'flex', gap: 2 }}>
+                <Button 
+                  variant="outlined" 
+                  color="primary" 
+                  onClick={() => setActiveTab(1)}
+                  startIcon={<DescriptionIcon />}
+                >
+                  Vista Previa
+                </Button>
+                <Button 
+                  variant="contained" 
+                  color="primary" 
+                  onClick={handleSaveToFile}
+                  startIcon={<DescriptionIcon />}
+                >
+                  Guardar Planilla
+                </Button>
+              </Box>
+            </Box>
+          </Paper>
+          
+          <Paper sx={{ p: 2, mt: 2 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+              <Typography variant="h6">Total General</Typography>
+              <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+                ${formatARS(total)}
+              </Typography>
+            </Box>
           </Paper>
         </Grid>
-      </Grid>
+      )}
+      
+      {activeTab === 1 && (
+        <Grid item xs={12}>
+          <Paper sx={{ p: 2, mt: 2 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+              <Typography variant="h6">Vista Previa de la Planilla</Typography>
+              <Button 
+                variant="outlined" 
+                onClick={() => setActiveTab(0)}
+                startIcon={<DescriptionIcon />}
+              >
+                Volver a la carga
+              </Button>
+            </Box>
+            
+            <Box sx={{ p: 2, border: '1px solid #e0e0e0', borderRadius: 1, backgroundColor: '#fffde7' }}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 'bold', textAlign: 'center', mb: 1 }}>
+                PLANILLA DE CIERRE DE CAJA
+              </Typography>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1, fontSize: '0.8rem' }}>
+                <span><strong>FECHA:</strong> {new Date().toLocaleDateString()}</span>
+                <span><strong>TURNO:</strong> {sinergieData.turno || '__________'}</span>
+                <span><strong>HORA:</strong> {new Date().toLocaleTimeString()}</span>
+              </Box>
+              <Typography variant="body2" sx={{ mb: 2, fontSize: '0.8rem' }}>
+                <strong>CAJERO/A:</strong> {sinergieData.cajero || '__________'}
+              </Typography>
+              
+              <TableContainer>
+                <Table size="small" sx={{ '& td, & th': { border: '1px solid #e0e0e0', p: 0.5, fontSize: '0.75rem' } }}>
+                  <TableHead>
+                    <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
+                      <TableCell sx={{ fontWeight: 'bold' }}>CONCEPTO</TableCell>
+                      <TableCell align="right" sx={{ fontWeight: 'bold' }}>IMPORTE</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {items.filter(item => item.amount).map((item, index) => (
+                      <TableRow key={index}>
+                        <TableCell>{item.name}</TableCell>
+                        <TableCell align="right">${item.formattedAmount}</TableCell>
+                      </TableRow>
+                    ))}
+                    <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
+                      <TableCell sx={{ fontWeight: 'bold' }}>TOTAL</TableCell>
+                      <TableCell align="right" sx={{ fontWeight: 'bold' }}>${formatARS(total)}</TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </Box>
+          </Paper>
+        </Grid>
+      )}
+      {activeTab === 0 && (
+        <Grid item xs={12}>
+          <Paper sx={{ p: 2, mt: 2 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+              <Typography variant="h6">Total General</Typography>
+              <Typography variant="h6">
+                ${formatARS(total)}
+              </Typography>
+            </Box>
+          </Paper>
+        </Grid>
+      )}
+      
+      {activeTab === 1 && (
+        <Grid item xs={12}>
+          <Paper sx={{ p: 2, mt: 2 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+              <Typography variant="h6">Total General</Typography>
+              <Typography variant="h5" sx={{ fontWeight: 'bold' }}>
+                ${formatARS(total)}
+              </Typography>
+            </Box>
+          </Paper>
+        </Grid>
+      )}
     </Box>
   );
 }
+
+// Función para formatear un número como moneda argentina
+const formatARS = (value) => {
+  if (value === '' || value === null || value === undefined) return '0,00';
+  
+  // Asegurarse de que el valor sea un número
+  const numValue = typeof value === 'string' ? parseFloat(value.replace(/\./g, '').replace(',', '.')) : value;
+  
+  // Formatear el número con separadores de miles y decimales
+  return new Intl.NumberFormat('es-AR', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(numValue);
+};
 
 export default ClosureChecklist;
