@@ -245,7 +245,7 @@ function CashAssistant() {
             sx={{ mb: 3 }}
           />
 
-          <List dense sx={{ maxHeight: 200, overflow: 'auto', border: '1px solid #555', borderRadius: 1 }}>
+          <List dense sx={{ border: '1px solid #555', borderRadius: 1, minHeight: '60px', maxHeight: 'none', overflow: 'visible' }}>
             {amounts.map((amount, index) => (
               <ListItem key={index}>
                 <ListItemText 
