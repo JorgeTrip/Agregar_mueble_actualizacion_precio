@@ -284,8 +284,44 @@ function ClosureChecklist() {
   };
 
   /**
+   * @description Maneja los eventos de teclado en los campos de nuevo ítem
+   * @param {React.KeyboardEvent} e - Evento de teclado
+   */
+  const handleNewItemKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (newItem.name && newItem.amount) {
+        handleAddItem();
+      }
+    }
+  };
+
+  /**
+   * @description Maneja la adición de un nuevo item personalizado al checklist
+   */
+  const handleAddItem = () => {
+    if (newItem.name && newItem.amount) {
+      setItems(prev => [...prev, {
+        name: newItem.name,
+        amount: newItem.amount,
+        formattedAmount: formatARS(parseFloat(newItem.amount))
+      }]);
+      setNewItem({ name: '', amount: '', formattedAmount: '' });
+    }
+  };
+
+  /**
+   * @description Maneja el cambio en el monto del nuevo ítem
+   * @param {React.ChangeEvent<HTMLInputElement>} e - Evento de cambio
+   */
+  const handleNewItemAmountChange = (e) => {
+    handleNewItemFormattedChange(e.target.value, newItem.formattedAmount);
+  };
+
+  /**
    * @description Maneja la adición de un nuevo item personalizado al checklist
    * @param {React.KeyboardEvent} e - Evento de teclado
+   * @deprecated Usar handleNewItemKeyDown en su lugar
    */
   const handleAddCustom = (e) => {
     if (e.key === 'Enter' && newItem.name && newItem.amount) {
@@ -315,6 +351,15 @@ function ClosureChecklist() {
 
   /**
    * @description Limpia todos los campos y reinicia el estado del componente
+   */
+  const handleResetForm = () => {
+    setItems(predefinedItems.map(name => ({ name, amount: '', formattedAmount: '' })));
+    setNewItem({ name: '', amount: '', formattedAmount: '' });
+  };
+
+  /**
+   * @description Limpia todos los campos y reinicia el estado del componente
+   * @deprecated Usar handleResetForm en su lugar
    */
   const handleClearAll = () => {
     setItems(predefinedItems.map(name => ({ name, amount: '', formattedAmount: '' })));
