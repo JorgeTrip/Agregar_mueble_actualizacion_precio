@@ -104,30 +104,7 @@ function ClosureChecklist() {
     cajero: ''
   });
 
-  /**
-   * @description Formatea un valor numérico a formato de moneda argentina
-   * @param {number} value - El valor a formatear
-   * @returns {string} El valor formateado como moneda argentina con punto como separador de miles y coma para decimales
-   */
-  const formatARS = (value) => {
-    if (value === '' || value === null || value === undefined || isNaN(value)) return '';
-    
-    // Convertir a número por si es string
-    const numValue = typeof value === 'string' ? parseFloat(value.replace(/\./g, '').replace(',', '.')) : Number(value);
-    
-    if (isNaN(numValue)) return '';
-    
-    // Usar Intl.NumberFormat para formatear con puntos y comas
-    const formatted = new Intl.NumberFormat('es-AR', {
-      style: 'currency',
-      currency: 'ARS',
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-      currencyDisplay: 'symbol'
-    }).format(numValue);
-    
-    return formatted;
-  };
+  // Utilizamos la función formatARS definida al final del archivo
   
   /**
    * @description Convierte un valor formateado a número
@@ -572,13 +549,8 @@ function ClosureChecklist() {
   const renderPlanilla = () => {
     // Crear un tema que fuerce los estilos claros independientemente del tema global
     const planillaTheme = createTheme({
-      // Deshabilitar transiciones para evitar parpadeos
-      transitions: {
-        create: () => 'none',
-      },
-      // Forzar modo claro explícitamente
       palette: {
-        mode: 'light',
+        mode: 'light', // Forzar modo claro
         background: {
           paper: '#fffde7',
           default: '#fffde7'
@@ -589,76 +561,46 @@ function ClosureChecklist() {
           disabled: 'rgba(0, 0, 0, 0.38)'
         }
       },
-      // Sobrescribir estilos de componentes
       components: {
-        // Estilos para el contenedor principal
-        MuiPaper: {
-          styleOverrides: {
-            root: {
-              backgroundColor: '#fffde7 !important',
-              backgroundImage: 'none !important',
-              '& *': {
-                color: 'rgba(0, 0, 0, 0.87) !important'
-              }
-            }
-          }
-        },
-        // Estilos para la tarjeta
         MuiCard: {
           styleOverrides: {
             root: {
-              backgroundColor: '#fffde7 !important',
-              color: 'rgba(0, 0, 0, 0.87) !important',
+              backgroundColor: '#fffde7',
+              color: 'rgba(0, 0, 0, 0.87)',
               '& .MuiCardContent-root': {
-                backgroundColor: '#fffde7 !important',
-                color: 'rgba(0, 0, 0, 0.87) !important',
-                padding: '16px !important',
-                '&:last-child': {
-                  paddingBottom: '16px !important'
-                }
+                backgroundColor: '#fffde7',
+                color: 'rgba(0, 0, 0, 0.87)'
               }
             }
           }
         },
-        // Estilos para la tipografía
         MuiTypography: {
           styleOverrides: {
             root: {
-              color: 'rgba(0, 0, 0, 0.87) !important',
-              '&.MuiTypography-h5': {
-                fontWeight: 'bold !important',
-                textAlign: 'center !important',
-                marginBottom: '16px !important'
-              }
+              color: 'rgba(0, 0, 0, 0.87)'
             }
           }
         },
-        // Estilos para la tabla
         MuiTable: {
           styleOverrides: {
             root: {
-              border: '1px solid rgba(0, 0, 0, 0.12) !important',
               '&, & *': {
                 color: 'rgba(0, 0, 0, 0.87) !important',
-                borderColor: 'rgba(0, 0, 0, 0.23) !important',
-                backgroundColor: 'transparent !important'
+                borderColor: 'rgba(0, 0, 0, 0.23) !important'
               }
             }
           }
         },
-        // Estilos para las filas de la tabla
         MuiTableRow: {
           styleOverrides: {
             head: {
               backgroundColor: '#f5f5f5 !important',
               '& .MuiTableCell-head': {
                 color: 'rgba(0, 0, 0, 0.87) !important',
-                fontWeight: 'bold !important',
-                backgroundColor: '#f5f5f5 !important'
+                fontWeight: 'bold !important'
               }
             },
             root: {
-              backgroundColor: '#fffde7 !important',
               '&:nth-of-type(odd)': {
                 backgroundColor: 'rgba(0, 0, 0, 0.02) !important'
               },
@@ -667,52 +609,19 @@ function ClosureChecklist() {
               },
               '& .MuiTableCell-root': {
                 color: 'rgba(0, 0, 0, 0.87) !important',
-                borderColor: 'rgba(0, 0, 0, 0.12) !important',
-                backgroundColor: 'transparent !important'
+                borderColor: 'rgba(0, 0, 0, 0.12) !important'
               }
             }
           }
         },
-        // Estilos para las celdas de la tabla
         MuiTableCell: {
           styleOverrides: {
             root: {
               borderColor: 'rgba(0, 0, 0, 0.12) !important',
               color: 'rgba(0, 0, 0, 0.87) !important',
-              backgroundColor: 'transparent !important',
               '&.MuiTableCell-head': {
                 color: 'rgba(0, 0, 0, 0.87) !important',
-                fontWeight: 'bold !important',
-                backgroundColor: '#f5f5f5 !important'
-              }
-            }
-          }
-        },
-        // Estilos para el contenedor de la tabla
-        MuiTableContainer: {
-          styleOverrides: {
-            root: {
-              backgroundColor: 'transparent !important',
-              '& *': {
-                backgroundColor: 'transparent !important'
-              }
-            }
-          }
-        },
-        // Estilos para los botones
-        MuiButton: {
-          styleOverrides: {
-            root: {
-              color: '#1976d2 !important',
-              '&:hover': {
-                backgroundColor: 'rgba(25, 118, 210, 0.04) !important'
-              }
-            },
-            contained: {
-              color: '#fff !important',
-              backgroundColor: '#1976d2 !important',
-              '&:hover': {
-                backgroundColor: '#1565c0 !important'
+                fontWeight: 'bold !important'
               }
             }
           }
@@ -721,25 +630,10 @@ function ClosureChecklist() {
     });
 
     return (
-      <Box sx={{ 
-        mt: 2,
-        '& .MuiPaper-root': {
-          backgroundColor: '#fffde7 !important',
-          backgroundImage: 'none !important'
-        }
-      }}>
+      <Box sx={{ mt: 2 }}>
         <ThemeProvider theme={planillaTheme}>
-          <Card 
-            variant="outlined" 
-            sx={{ 
-              mb: 3,
-              backgroundColor: '#fffde7 !important',
-              '& .MuiCardContent-root': {
-                backgroundColor: '#fffde7 !important'
-              }
-            }}
-          >
-            <CardContent sx={{ backgroundColor: '#fffde7 !important' }}>
+          <Card variant="outlined" sx={{ mb: 3 }}>
+            <CardContent>
               <Box sx={{ mb: 3, textAlign: 'center' }}>
                 <Typography variant="h5" component="h2" gutterBottom sx={{ fontWeight: 'bold' }}>
                   PLANILLA DE CIERRE DE CAJA
@@ -826,24 +720,7 @@ function ClosureChecklist() {
           </Card>
         </ThemeProvider>
         
-        <Box sx={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          mt: 2,
-          '& .MuiButton-root': {
-            color: '#1976d2 !important',
-            '&:hover': {
-              backgroundColor: 'rgba(25, 118, 210, 0.04) !important'
-            }
-          },
-          '& .MuiButton-contained': {
-            color: '#fff !important',
-            backgroundColor: '#1976d2 !important',
-            '&:hover': {
-              backgroundColor: '#1565c0 !important'
-            }
-          }
-        }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
           <Button 
             variant="outlined" 
             onClick={() => setActiveTab(0)}
@@ -1114,7 +991,7 @@ function ClosureChecklist() {
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
               <Typography variant="h6">Total General</Typography>
               <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
-                ${formatARS(total)}
+                {formatARS(total)}
               </Typography>
             </Box>
           </Paper>
@@ -1135,52 +1012,94 @@ function ClosureChecklist() {
               </Button>
             </Box>
             
-            <Box sx={{ p: 2, border: '1px solid #e0e0e0', borderRadius: 1, backgroundColor: '#fffde7' }}>
-              <Typography variant="subtitle2" sx={{ fontWeight: 'bold', textAlign: 'center', mb: 1 }}>
-                PLANILLA DE CIERRE DE CAJA
-              </Typography>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1, fontSize: '0.8rem' }}>
-                <span><strong>FECHA:</strong> {new Date().toLocaleDateString()}</span>
-                <span><strong>TURNO:</strong> {sinergieData.turno || '__________'}</span>
-                <span><strong>HORA:</strong> {new Date().toLocaleTimeString()}</span>
-              </Box>
-              <Typography variant="body2" sx={{ mb: 2, fontSize: '0.8rem' }}>
-                <strong>CAJERO/A:</strong> {sinergieData.cajero || '__________'}
-              </Typography>
-              
-              <TableContainer>
-                <Table size="small" sx={{ '& td, & th': { border: '1px solid #e0e0e0', p: 0.5, fontSize: '0.75rem' } }}>
-                  <TableHead>
-                    <TableRow sx={{ 
-                  '& .MuiTableCell-root': {
-                    backgroundColor: '#f5f5f5',
-                    color: 'rgba(0, 0, 0, 0.87)'
+            <ThemeProvider theme={createTheme({
+              palette: {
+                mode: 'light',
+                background: {
+                  paper: '#fffde7',
+                  default: '#fffde7'
+                },
+                text: {
+                  primary: 'rgba(0, 0, 0, 0.87)',
+                  secondary: 'rgba(0, 0, 0, 0.6)'
+                }
+              },
+              components: {
+                MuiBox: {
+                  styleOverrides: {
+                    root: {
+                      backgroundColor: '#fffde7',
+                      color: 'rgba(0, 0, 0, 0.87) !important'
+                    }
                   }
-                }}>
-                      <TableCell sx={{ fontWeight: 'bold' }}>CONCEPTO</TableCell>
-                      <TableCell align="right" sx={{ fontWeight: 'bold' }}>IMPORTE</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {items.filter(item => item.amount).map((item, index) => (
-                      <TableRow key={index}>
-                        <TableCell>{item.name}</TableCell>
-                        <TableCell align="right">${item.formattedAmount}</TableCell>
+                },
+                MuiTypography: {
+                  styleOverrides: {
+                    root: {
+                      color: 'rgba(0, 0, 0, 0.87) !important'
+                    }
+                  }
+                },
+                MuiTableCell: {
+                  styleOverrides: {
+                    root: {
+                      color: 'rgba(0, 0, 0, 0.87) !important',
+                      borderColor: 'rgba(0, 0, 0, 0.12) !important'
+                    },
+                    head: {
+                      fontWeight: 'bold !important',
+                      backgroundColor: '#f5f5f5 !important'
+                    }
+                  }
+                },
+                MuiTableRow: {
+                  styleOverrides: {
+                    root: {
+                      '&:nth-of-type(odd)': {
+                        backgroundColor: 'rgba(0, 0, 0, 0.02) !important'
+                      }
+                    }
+                  }
+                }
+              }
+            })}>
+              <Box sx={{ p: 2, border: '1px solid #e0e0e0', borderRadius: 1, backgroundColor: '#fffde7 !important' }}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 'bold', textAlign: 'center', mb: 1, color: 'rgba(0, 0, 0, 0.87) !important' }}>
+                  PLANILLA DE CIERRE DE CAJA
+                </Typography>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1, fontSize: '0.8rem', color: 'rgba(0, 0, 0, 0.87) !important' }}>
+                  <span><strong>FECHA:</strong> {new Date().toLocaleDateString()}</span>
+                  <span><strong>TURNO:</strong> {sinergieData.turno || '__________'}</span>
+                  <span><strong>HORA:</strong> {new Date().toLocaleTimeString()}</span>
+                </Box>
+                <Typography variant="body2" sx={{ mb: 2, fontSize: '0.8rem', color: 'rgba(0, 0, 0, 0.87) !important' }}>
+                  <strong>CAJERO/A:</strong> {sinergieData.cajero || '__________'}
+                </Typography>
+                
+                <TableContainer>
+                  <Table size="small" sx={{ '& td, & th': { border: '1px solid #e0e0e0', p: 0.5, fontSize: '0.75rem', color: 'rgba(0, 0, 0, 0.87) !important' } }}>
+                    <TableHead>
+                      <TableRow>
+                        <TableCell sx={{ fontWeight: 'bold', backgroundColor: '#f5f5f5 !important', color: 'rgba(0, 0, 0, 0.87) !important' }}>CONCEPTO</TableCell>
+                        <TableCell align="right" sx={{ fontWeight: 'bold', backgroundColor: '#f5f5f5 !important', color: 'rgba(0, 0, 0, 0.87) !important' }}>IMPORTE</TableCell>
                       </TableRow>
-                    ))}
-                    <TableRow sx={{ 
-                  '& .MuiTableCell-root': {
-                    backgroundColor: '#f5f5f5',
-                    color: 'rgba(0, 0, 0, 0.87)'
-                  }
-                }}>
-                      <TableCell sx={{ fontWeight: 'bold' }}>TOTAL</TableCell>
-                      <TableCell align="right" sx={{ fontWeight: 'bold' }}>${formatARS(total)}</TableCell>
-                    </TableRow>
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            </Box>
+                    </TableHead>
+                    <TableBody>
+                      {items.filter(item => item.amount).map((item, index) => (
+                        <TableRow key={index}>
+                          <TableCell sx={{ color: 'rgba(0, 0, 0, 0.87) !important' }}>{item.name}</TableCell>
+                          <TableCell align="right" sx={{ color: 'rgba(0, 0, 0, 0.87) !important' }}>{formatARS(item.amount)}</TableCell>
+                        </TableRow>
+                      ))}
+                      <TableRow>
+                        <TableCell sx={{ fontWeight: 'bold', backgroundColor: '#f5f5f5 !important', color: 'rgba(0, 0, 0, 0.87) !important' }}>TOTAL</TableCell>
+                        <TableCell align="right" sx={{ fontWeight: 'bold', backgroundColor: '#f5f5f5 !important', color: 'rgba(0, 0, 0, 0.87) !important' }}>{formatARS(total)}</TableCell>
+                      </TableRow>
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              </Box>
+            </ThemeProvider>
           </Paper>
         </Grid>
       )}
@@ -1203,7 +1122,7 @@ function ClosureChecklist() {
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
               <Typography variant="h6">Total General</Typography>
               <Typography variant="h5" sx={{ fontWeight: 'bold' }}>
-                ${formatARS(total)}
+                {formatARS(total)}
               </Typography>
             </Box>
           </Paper>
@@ -1215,13 +1134,17 @@ function ClosureChecklist() {
 
 // Función para formatear un número como moneda argentina
 const formatARS = (value) => {
-  if (value === '' || value === null || value === undefined) return '0,00';
+  if (value === '' || value === null || value === undefined || isNaN(value)) return '0,00';
   
   // Asegurarse de que el valor sea un número
   const numValue = typeof value === 'string' ? parseFloat(value.replace(/\./g, '').replace(',', '.')) : value;
   
-  // Formatear el número con separadores de miles y decimales
+  if (isNaN(numValue)) return '0,00';
+  
+  // Formatear el número con separadores de miles y decimales y el símbolo $
   return new Intl.NumberFormat('es-AR', {
+    style: 'currency',
+    currency: 'ARS',
     minimumFractionDigits: 2,
     maximumFractionDigits: 2
   }).format(numValue);
