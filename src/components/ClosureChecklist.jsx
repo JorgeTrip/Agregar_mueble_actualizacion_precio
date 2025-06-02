@@ -650,7 +650,7 @@ function ClosureChecklist() {
         textAlign: 'center', 
         mb: 2 
       }}>
-        Checklist de Cierre de Caja
+        Planilla de Corte de Caja
       </Typography>
       
       <AppBar position="static" color="default" sx={{ mb: 3, borderRadius: 1, overflow: 'hidden' }}>
