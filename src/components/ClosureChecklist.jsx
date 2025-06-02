@@ -96,9 +96,25 @@ function ClosureChecklist() {
   /** @type {React.MutableRefObject<HTMLInputElement[]>} Referencias a los campos de entrada para navegación con teclado */
   const inputRefs = useRef([]);
   
+  /**
+   * @description Determina el turno según la hora actual
+   * @returns {string} El turno correspondiente (Mañana, Tarde o Noche)
+   */
+  const determinarTurno = () => {
+    const horaActual = new Date().getHours();
+    
+    if (horaActual >= 8 && horaActual < 15) {
+      return 'Turno Mañana';
+    } else if (horaActual >= 15 && horaActual < 22) {
+      return 'Turno Tarde';
+    } else {
+      return 'Turno Noche';
+    }
+  };
+
   // Estado para los datos de Sinergie
   const [sinergieData, setSinergieData] = useState({
-    turno: '',
+    turno: determinarTurno(),
     fecha: new Date().toISOString().split('T')[0], // Formato YYYY-MM-DD para input date
     hora: new Date().toTimeString().substring(0, 5), // Formato HH:MM
     cajero: ''
