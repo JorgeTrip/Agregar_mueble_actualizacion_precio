@@ -44,15 +44,18 @@ const predefinedItems = [
   'Deposito 1',
   'Deposito 2',
   'Deposito 3',
+  'Deposito 4',
   'Depo Final',
   'Retiro',
   'Ajuste',
+  'Notas de crédito',
+  'Facturas manuales',
+  'Extra Cash Posnet',
+  'Extra Cash Mercado Pago',
   'Tarjetas',
   'Mercado Pago',
   'Pedidos Ya',
-  'Rappi',
-  'Extra Cash Electron',
-  'Extra Cash Mercado Pago'
+  'Rappi'
 ];
 
 /**
@@ -1137,76 +1140,197 @@ function ClosureChecklist() {
                 Ingresar Valores
               </Typography>
               
-              <Grid container spacing={2} sx={{ maxWidth: '100%' }}>
-                {items.map((item, index) => (
-                  <Fragment key={index}>
-                    <Grid item xs={7} sm={8} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Typography variant="body1">{item.name}</Typography>
-                      
-                      {/* Switch para el campo Ajuste */}
-                      {item.name === 'Ajuste' && (
-                        <Tooltip title={isAjusteEgreso ? "Egreso (valor negativo)" : "Ingreso (valor positivo)"}>
-                          <FormControlLabel
-                            control={
-                              <Switch
-                                size="small"
-                                checked={isAjusteEgreso}
-                                onChange={handleAjusteTypeChange}
-                                color="primary"
+              {/* Caja 1: Cargar desde comprobantes */}
+              <Box 
+                sx={{ 
+                  position: 'relative',
+                  border: '1px solid rgba(255, 255, 255, 0.5)', 
+                  borderRadius: 2, 
+                  p: 2, 
+                  pt: 3,
+                  mb: 3, 
+                  mt: 3
+                }}
+              >
+                <Typography 
+                  variant="subtitle1" 
+                  sx={{ 
+                    position: 'absolute',
+                    top: '-12px',
+                    left: '12px',
+                    px: 1,
+                    fontWeight: 'bold',
+                    backgroundColor: '#121212', // Fondo que coincide con el tema oscuro
+                    zIndex: 1
+                  }}
+                >
+                  Cargar desde comprobantes
+                </Typography>
+                
+                <Grid container spacing={2} sx={{ maxWidth: '100%' }}>
+                  {items.filter(item => [
+                    'Deposito 1', 'Deposito 2', 'Deposito 3', 'Deposito 4', 'Depo Final', 
+                    'Retiro', 'Ajuste', 'Notas de crédito', 'Facturas manuales', 
+                    'Extra Cash Posnet', 'Extra Cash Mercado Pago'
+                  ].includes(item.name)).map((item, index) => {
+                    // Recalcular el índice real en el array original
+                    const realIndex = items.findIndex(i => i.name === item.name);
+                    return (
+                      <Fragment key={realIndex}>
+                        <Grid item xs={7} sm={8} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <Typography variant="body1">{item.name}</Typography>
+                          
+                          {/* Switch para el campo Ajuste */}
+                          {item.name === 'Ajuste' && (
+                            <Tooltip title={isAjusteEgreso ? "Egreso (valor negativo)" : "Ingreso (valor positivo)"}>
+                              <FormControlLabel
+                                control={
+                                  <Switch
+                                    size="small"
+                                    checked={isAjusteEgreso}
+                                    onChange={handleAjusteTypeChange}
+                                    color="primary"
+                                  />
+                                }
+                                label={<Typography variant="caption" color="text.secondary">
+                                  {isAjusteEgreso ? "Egreso" : "Ingreso"}
+                                </Typography>}
+                                sx={{ mb: 0, ml: 0 }}
                               />
-                            }
-                             label={<Typography variant="caption" color="text.secondary">
-                              {isAjusteEgreso ? "Egreso" : "Ingreso"}
-                            </Typography>}
-                            sx={{ mb: 0, ml: 0 }}
-                          />
-                        </Tooltip>
-                      )}
-                    </Grid>
-                    <Grid item xs={5} sm={4}>
-                      <TextField
-                        fullWidth
-                        variant="outlined"
-                        size="small"
-                        type="text"
-                        value={item.amount ? `${parseFloat(item.amount) < 0 ? '-$' : '$'}${item.formattedAmount || formatARS(Math.abs(parseFloat(item.amount)))}` : ''}
-                        onChange={(e) => {
-                          // Remover el símbolo $ si existe antes de procesar
-                          let value = e.target.value;
-                          if (value.startsWith('$')) value = value.substring(1);
-                          if (value.startsWith('-$')) value = value.substring(2);
-                          handleFormattedChange({ target: { value } }, index);
-                        }}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') {
-                            e.preventDefault();
-                            const nextIndex = index + 1;
-                            if (nextIndex < items.length) {
-                              const nextInput = inputRefs.current[nextIndex];
-                              if (nextInput) {
-                                nextInput.focus();
+                            </Tooltip>
+                          )}
+                        </Grid>
+                        <Grid item xs={5} sm={4}>
+                          <TextField
+                            fullWidth
+                            variant="outlined"
+                            size="small"
+                            type="text"
+                            value={item.amount ? `${parseFloat(item.amount) < 0 ? '-$' : '$'}${item.formattedAmount || formatARS(Math.abs(parseFloat(item.amount)))}` : ''}
+                            onChange={(e) => {
+                              // Remover el símbolo $ si existe antes de procesar
+                              let value = e.target.value;
+                              if (value.startsWith('$')) value = value.substring(1);
+                              if (value.startsWith('-$')) value = value.substring(2);
+                              handleFormattedChange({ target: { value } }, realIndex);
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault();
+                                const nextIndex = index + 1;
+                                if (nextIndex < items.length) {
+                                  const nextInput = inputRefs.current[nextIndex];
+                                  if (nextInput) {
+                                    nextInput.focus();
+                                  }
+                                }
                               }
-                            }
-                          }
-                        }}
-                        inputRef={el => inputRefs.current[index] = el}
-                        sx={{
-                          '& .MuiInputBase-root': {
-                            height: '40px'
-                          },
-                          '& .MuiOutlinedInput-input': {
-                            textAlign: 'right',
-                            padding: '8px 12px'
-                          }
-                        }}
-                        inputProps={{
-                          inputMode: 'decimal'
-                        }}
-                      />
-                    </Grid>
-                  </Fragment>
-                ))}
-              </Grid>
+                            }}
+                            inputRef={el => inputRefs.current[realIndex] = el}
+                            sx={{
+                              '& .MuiInputBase-root': {
+                                height: '40px'
+                              },
+                              '& .MuiOutlinedInput-input': {
+                                textAlign: 'right',
+                                padding: '8px 12px'
+                              }
+                            }}
+                            inputProps={{
+                              inputMode: 'decimal'
+                            }}
+                          />
+                        </Grid>
+                      </Fragment>
+                    );
+                  })}
+                </Grid>
+              </Box>
+              
+              {/* Caja 2: Copiar desde Sinergie */}
+              <Box 
+                sx={{ 
+                  position: 'relative',
+                  border: '1px solid rgba(255, 255, 255, 0.5)', 
+                  borderRadius: 2, 
+                  p: 2, 
+                  pt: 3,
+                  mb: 3,
+                  mt: 3
+                }}
+              >
+                <Typography 
+                  variant="subtitle1" 
+                  sx={{ 
+                    position: 'absolute',
+                    top: '-12px',
+                    left: '12px',
+                    px: 1,
+                    fontWeight: 'bold',
+                    backgroundColor: '#121212', // Fondo que coincide con el tema oscuro
+                    zIndex: 1
+                  }}
+                >
+                  Copiar desde Sinergie
+                </Typography>
+                
+                <Grid container spacing={2} sx={{ maxWidth: '100%' }}>
+                  {items.filter(item => [
+                    'Tarjetas', 'Mercado Pago', 'Pedidos Ya', 'Rappi'
+                  ].includes(item.name)).map((item, index) => {
+                    // Recalcular el índice real en el array original
+                    const realIndex = items.findIndex(i => i.name === item.name);
+                    return (
+                      <Fragment key={realIndex}>
+                        <Grid item xs={7} sm={8} sx={{ display: 'flex', alignItems: 'center' }}>
+                          <Typography variant="body1">{item.name}</Typography>
+                        </Grid>
+                        <Grid item xs={5} sm={4}>
+                          <TextField
+                            fullWidth
+                            variant="outlined"
+                            size="small"
+                            type="text"
+                            value={item.amount ? `${parseFloat(item.amount) < 0 ? '-$' : '$'}${item.formattedAmount || formatARS(Math.abs(parseFloat(item.amount)))}` : ''}
+                            onChange={(e) => {
+                              // Remover el símbolo $ si existe antes de procesar
+                              let value = e.target.value;
+                              if (value.startsWith('$')) value = value.substring(1);
+                              if (value.startsWith('-$')) value = value.substring(2);
+                              handleFormattedChange({ target: { value } }, realIndex);
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault();
+                                const nextIndex = index + 1;
+                                if (nextIndex < items.length) {
+                                  const nextInput = inputRefs.current[nextIndex];
+                                  if (nextInput) {
+                                    nextInput.focus();
+                                  }
+                                }
+                              }
+                            }}
+                            inputRef={el => inputRefs.current[realIndex] = el}
+                            sx={{
+                              '& .MuiInputBase-root': {
+                                height: '40px'
+                              },
+                              '& .MuiOutlinedInput-input': {
+                                textAlign: 'right',
+                                padding: '8px 12px'
+                              }
+                            }}
+                            inputProps={{
+                              inputMode: 'decimal'
+                            }}
+                          />
+                        </Grid>
+                      </Fragment>
+                    );
+                  })}
+                </Grid>
+              </Box>
               
               <Typography variant="body2" color="text.secondary" sx={{ mt: 2, fontStyle: 'italic' }}>
                 Ingrese los montos correspondientes a cada concepto
