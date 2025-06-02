@@ -511,12 +511,34 @@ useEffect(() => {
                         Para un niño de {weight} kg con dosis de {medications[medication].dosagePerKg} mg/kg cada {medications[medication].frequency}:
                       </Typography>
                       <Divider sx={{ my: 1 }} />
-                      <Typography variant="body1" sx={{ fontWeight: 'bold', mb: 1 }}>
-                        • Dosis por toma: {formatDosage(dosage)} ml
-                      </Typography>
-                      <Typography variant="body1" sx={{ fontWeight: 'bold' }}>
-                        • Total diario: {getDosesPerDay()}
-                      </Typography>
+                      <Box sx={{ mt: 1, mb: 2 }}>
+                        <Typography variant="body1" sx={{ 
+                          fontWeight: 'bold', 
+                          color: '#1976d2', 
+                          bgcolor: '#e3f2fd', 
+                          px: 2, 
+                          py: 1, 
+                          borderRadius: 2, 
+                          boxShadow: 2,
+                          display: 'inline-block'
+                        }}>
+                          Dosis por toma: {formatDosage(dosage)} ml
+                        </Typography>
+                      </Box>
+                      <Box sx={{ mb: 2 }}>
+                        <Typography variant="body1" sx={{ 
+                          fontWeight: 'bold', 
+                          color: '#1976d2', 
+                          bgcolor: '#e3f2fd', 
+                          px: 2, 
+                          py: 1, 
+                          borderRadius: 2, 
+                          boxShadow: 2,
+                          display: 'inline-block'
+                        }}>
+                          Total diario: {getDosesPerDay()}
+                        </Typography>
+                      </Box>
                     </CardContent>
                   </Card>
 
