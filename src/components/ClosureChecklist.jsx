@@ -1038,7 +1038,7 @@ function ClosureChecklist() {
           textColor="primary"
           variant="fullWidth"
         >
-          <Tab label="Carga desde Sinergie" />
+          <Tab label="Carga de Datos" />
           <Tab label="Planilla de Cierre" />
         </Tabs>
       </AppBar>
