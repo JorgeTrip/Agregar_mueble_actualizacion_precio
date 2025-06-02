@@ -96,6 +96,9 @@ function ClosureChecklist() {
   /** @type {React.MutableRefObject<HTMLInputElement[]>} Referencias a los campos de entrada para navegación con teclado */
   const inputRefs = useRef([]);
   
+  /** @type {React.MutableRefObject<HTMLInputElement>} Referencia al input de carga de archivo */
+  const fileInputRef = useRef(null);
+  
   /**
    * @description Determina el turno según la hora actual
    * @returns {string} El turno correspondiente (Mañana, Tarde o Noche)
@@ -372,17 +375,192 @@ function ClosureChecklist() {
   };
 
   /**
+   * @description Formatea un valor numérico como moneda sin el símbolo $
+   * @param {number} value - Valor a formatear
+   * @returns {string} - Valor formateado
+   */
+  const formatARSWithoutSymbol = (value) => {
+    if (value === undefined || value === null || isNaN(value)) return '0,00';
+    
+    // Convertir a número si es string
+    const num = typeof value === 'string' ? parseFloat(value) : value;
+    
+    // Formatear con separador de miles y coma decimal
+    return num.toLocaleString('es-AR', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).replace('.', ',');
+  };
+  
+  /**
    * @description Guarda el checklist actual en un archivo de texto
    */
   const handleSaveToFile = () => {
     const currentDate = new Date();
     const formattedDate = currentDate.toISOString().split('T')[0]; // YYYY-MM-DD format
-    const content = items.map(item => 
-      `${item.name.padEnd(25)}: $${formatARS(item.amount || 0)}`
-    ).join('\n') + `\n\nTOTAL GENERAL: $${formatARS(total)}`;
+    
+    // Guardar solo los items que tienen valores
+    const itemsWithValues = items.filter(item => item.amount);
+    
+    // Crear el contenido del archivo
+    const content = itemsWithValues.map(item => {
+      // Para los items individuales, usar el formato ya existente o formatear
+      const formattedValue = item.formattedAmount || formatARSWithoutSymbol(item.amount || 0);
+      return `${item.name.padEnd(25)}: $${formattedValue}`;
+    }).join('\n') + `\n\nTOTAL GENERAL: $${formatARSWithoutSymbol(total)}`;
     
     const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
     saveAs(blob, `${formattedDate} Cierre de caja.txt`);
+  };
+
+  /**
+   * @description Maneja la apertura del diálogo de selección de archivo
+   */
+  const handleOpenFileDialog = () => {
+    fileInputRef.current?.click();
+  };
+
+  /**
+   * @description Carga y procesa el archivo de texto seleccionado
+   * @param {React.ChangeEvent<HTMLInputElement>} e - Evento de cambio del input de archivo
+   */
+  const handleLoadFromFile = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const content = event.target?.result;
+        if (typeof content !== 'string') return;
+
+        console.log('Contenido del archivo cargado:', content); // Depuración
+
+        // Procesar el contenido del archivo
+        const lines = content.split('\n').filter(line => line.trim() !== '');
+        
+        // Crear una copia de los items predefinidos para construir el nuevo array
+        // Importante: Necesitamos inicializar con la misma estructura exacta para mantener las referencias
+        const initialItems = JSON.parse(JSON.stringify(items));
+        const itemMap = {};
+        
+        // Mapear los items existentes por nombre para facilitar la búsqueda
+        initialItems.forEach(item => {
+          itemMap[item.name.toLowerCase()] = {
+            index: initialItems.findIndex(i => i.name === item.name),
+            item
+          };
+        });
+        
+        // Procesar cada línea
+        lines.forEach(line => {
+          // Omitir línea de total general
+          if (line.toLowerCase().includes('total general')) return;
+          
+          // Extraer nombre y valor
+          const colonIndex = line.indexOf(':');
+          if (colonIndex === -1) return;
+          
+          const name = line.substring(0, colonIndex).trim();
+          let valueStr = line.substring(colonIndex + 1).trim();
+          
+          console.log('Procesando línea:', name, valueStr); // Depuración
+          
+          // Eliminar símbolo de moneda y formateo
+          if (valueStr.startsWith('$')) {
+            valueStr = valueStr.substring(1).trim();
+          }
+          
+          // Si el valor es solo guiones o está vacío, saltamos
+          if (valueStr === '' || valueStr === '__________') return;
+          
+          // Convertir a formato numérico para JS
+          const numericValue = valueStr.replace(/\./g, '').replace(',', '.');
+          const amount = parseFloat(numericValue);
+          
+          if (!isNaN(amount)) {
+            // Buscar item existente o una coincidencia parcial
+            let foundItemKey = null;
+            let foundPredefinedIndex = -1;
+            
+            // Primero buscar coincidencia exacta
+            if (itemMap[name.toLowerCase()]) {
+              foundItemKey = name.toLowerCase();
+            } else {
+              // Buscar coincidencias parciales
+              Object.keys(itemMap).forEach(key => {
+                if (name.toLowerCase().includes(key) || key.includes(name.toLowerCase())) {
+                  foundItemKey = key;
+                }
+              });
+              
+              // Si no encontramos coincidencia, buscar en items predefinidos
+              if (!foundItemKey) {
+                foundPredefinedIndex = predefinedItems.findIndex(item => 
+                  item.toLowerCase() === name.toLowerCase() || 
+                  name.toLowerCase().includes(item.toLowerCase()) ||
+                  item.toLowerCase().includes(name.toLowerCase()));
+              }
+            }
+            
+            if (foundItemKey) {
+              // Actualizar item existente
+              const { index } = itemMap[foundItemKey];
+              initialItems[index] = {
+                ...initialItems[index],
+                amount: amount.toString(),
+                formattedAmount: valueStr
+              };
+              console.log('Item existente actualizado:', initialItems[index].name, amount, valueStr); // Depuración
+            } else if (foundPredefinedIndex >= 0) {
+              // Actualizar item predefinido que no está en el mapa actual
+              const predefinedName = predefinedItems[foundPredefinedIndex];
+              const existingIndex = initialItems.findIndex(item => item.name === predefinedName);
+              
+              if (existingIndex >= 0) {
+                initialItems[existingIndex] = {
+                  ...initialItems[existingIndex],
+                  amount: amount.toString(),
+                  formattedAmount: valueStr
+                };
+                console.log('Item predefinido actualizado:', predefinedName, amount, valueStr); // Depuración
+              }
+            } else {
+              // Es un item personalizado nuevo
+              initialItems.push({
+                name,
+                amount: amount.toString(),
+                formattedAmount: valueStr
+              });
+              console.log('Item personalizado agregado:', name, amount, valueStr); // Depuración
+            }
+          }
+        });
+        
+        console.log('Items finales:', initialItems); // Depuración
+        
+        // Forzar una actualización completa del estado
+        setItems([]);
+        
+        // Actualizar con los nuevos items después de un breve retraso
+        setTimeout(() => {
+          setItems(initialItems);
+          console.log('Estado actualizado con items:', initialItems);
+          
+          // Mostrar mensaje de éxito
+          alert('Planilla cargada correctamente.');
+        }, 50);
+        
+      } catch (error) {
+        console.error('Error al procesar el archivo:', error);
+        alert('Error al procesar el archivo. Verifique que el formato sea correcto.');
+      }
+      
+      // Limpiar el input para permitir cargar el mismo archivo nuevamente
+      e.target.value = '';
+    };
+    
+    reader.readAsText(file);
   };
 
   /**
@@ -918,7 +1096,7 @@ function ClosureChecklist() {
                         variant="outlined"
                         size="small"
                         type="text"
-                        value={item.amount ? `$${item.formattedAmount}` : ''}
+                        value={item.amount ? `$${item.formattedAmount || formatARS(parseFloat(item.amount))}` : ''}
                         onChange={(e) => {
                           // Remover el símbolo $ si existe antes de procesar
                           const value = e.target.value.startsWith('$') ? e.target.value.substring(1) : e.target.value;
@@ -1034,10 +1212,28 @@ function ClosureChecklist() {
                 variant="contained" 
                 color="primary"
                 onClick={handleSaveToFile}
+                startIcon={<SaveIcon />}
                 disabled={!total}
+                sx={{ mb: { xs: 1, sm: 0 } }}
               >
                 Guardar Planilla
               </Button>
+              <Button 
+                fullWidth
+                variant="contained" 
+                color="secondary"
+                onClick={handleOpenFileDialog}
+                startIcon={<UploadIcon />}
+              >
+                Cargar Planilla
+              </Button>
+              <input
+                type="file"
+                accept=".txt"
+                ref={fileInputRef}
+                style={{ display: 'none' }}
+                onChange={handleLoadFromFile}
+              />
             </Box>
           </Paper>
           
