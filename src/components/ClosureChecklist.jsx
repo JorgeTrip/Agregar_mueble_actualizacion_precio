@@ -1,4 +1,3 @@
-import React, { useState, useMemo } from 'react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { 
   Box, 
@@ -25,7 +24,7 @@ import {
   InputAdornment
 } from '@mui/material';
 import { saveAs } from 'file-saver';
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, Fragment } from 'react';
 import { Upload as UploadIcon, Description as DescriptionIcon, Save as SaveIcon } from '@mui/icons-material';
 
 /**
@@ -909,7 +908,7 @@ function ClosureChecklist() {
               
               <Grid container spacing={2} sx={{ maxWidth: '100%' }}>
                 {items.map((item, index) => (
-                  <React.Fragment key={index}>
+                  <Fragment key={index}>
                     <Grid item xs={7} sm={8} sx={{ display: 'flex', alignItems: 'center' }}>
                       <Typography variant="body1">{item.name}</Typography>
                     </Grid>
@@ -952,7 +951,7 @@ function ClosureChecklist() {
                         }}
                       />
                     </Grid>
-                  </React.Fragment>
+                  </Fragment>
                 ))}
               </Grid>
               
