@@ -98,8 +98,8 @@ function ClosureChecklist() {
   // Estado para los datos de Sinergie
   const [sinergieData, setSinergieData] = useState({
     turno: '',
-    fecha: new Date().toLocaleDateString(),
-    hora: new Date().toLocaleTimeString(),
+    fecha: new Date().toISOString().split('T')[0], // Formato YYYY-MM-DD para input date
+    hora: new Date().toTimeString().substring(0, 5), // Formato HH:MM
     cajero: ''
   });
 
@@ -653,8 +653,9 @@ function ClosureChecklist() {
       width: '1000px', 
       maxWidth: '100%',
       boxSizing: 'border-box',
-      mx: 'auto'
-    }}>
+      mx: 'auto',
+      '& .MuiFormControl-root': { mt: 1 }  
+      }}>
       <Typography variant="h4" component="h1" gutterBottom sx={{ 
         color: '#90caf9', 
         fontWeight: 'bold', 
@@ -683,21 +684,54 @@ function ClosureChecklist() {
             <Typography variant="h6" gutterBottom>
               Datos del Turno
             </Typography>
-            <Grid container spacing={2} sx={{ mb: 3 }}>
+            <Grid container spacing={2} sx={{ mb: 2, '& .MuiFormControl-root': { width: '100%' } }}>
               <Grid item xs={12} md={3}>
-                <TextField
-                  fullWidth
-                  label="Turno"
-                  value={sinergieData.turno}
-                  onChange={(e) => setSinergieData(prev => ({ ...prev, turno: e.target.value }))}
-                  select
-                  SelectProps={{ native: true }}
-                >
-                  <option value="">Seleccionar turno</option>
-                  <option value="Turno Mañana">Turno Mañana</option>
-                  <option value="Turno Tarde">Turno Tarde</option>
-                  <option value="Turno Noche">Turno Noche</option>
-                </TextField>
+                <Box sx={{ position: 'relative', width: '100%', mt: 0, mb: 1, height: '56px', display: 'flex', alignItems: 'center' }}>
+                  <select
+                    value={sinergieData.turno}
+                    onChange={(e) => setSinergieData(prev => ({ ...prev, turno: e.target.value }))}
+                    style={{
+                      width: '100%',
+                      height: '56px',
+                      padding: '16px 14px',
+                      marginTop: '15.5px',
+                      border: '1px solid rgba(255, 255, 255, 0.23)',
+                      borderRadius: '4px',
+                      backgroundColor: 'transparent',
+                      fontSize: '1rem',
+                      color: sinergieData.turno ? 'white' : 'rgba(255, 255, 255, 0.7)',
+                      cursor: 'pointer',
+                      appearance: 'none',
+                      outline: 'none',
+                      transition: 'all 0.2s ease-in-out',
+                      '&:hover': {
+                        borderColor: 'rgba(255, 255, 255, 0.87)'
+                      },
+                      '&:focus': {
+                        borderColor: '#90caf9',
+                        borderWidth: '1px',
+                        boxShadow: '0 0 0 1px #90caf9'
+                      }
+                    }}
+                  >
+                    <option value="" disabled style={{ color: 'rgba(255, 255, 255, 0.7)', backgroundColor: '#121212' }}>
+                      Seleccionar turno
+                    </option>
+                      <option value="Turno Mañana" style={{ color: 'white', backgroundColor: '#121212' }}>Turno Mañana</option>
+                    <option value="Turno Tarde" style={{ color: 'white', backgroundColor: '#121212' }}>Turno Tarde</option>
+                    <option value="Turno Noche" style={{ color: 'white', backgroundColor: '#121212' }}>Turno Noche</option>
+                  </select>
+                  <Box sx={{
+                    position: 'absolute',
+                    right: '12px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    pointerEvents: 'none',
+                    color: 'rgba(255, 255, 255, 0.7)'
+                  }}>
+                    ▼
+                  </Box>
+                </Box>
               </Grid>
               <Grid item xs={12} md={3}>
                 <TextField
@@ -733,34 +767,49 @@ function ClosureChecklist() {
               </Grid>
             </Grid>
             
-            <Typography variant="h6" gutterBottom>
-              Ingresar Valores
-            </Typography>
-            
-            <List>
-              {items.map((item, index) => (
-                <React.Fragment key={index}>
-                  <ListItem>
-                    <ListItemText primary={item.name} />
-                    <TextField
-                      variant="outlined"
-                      size="small"
-                      type="text"
-                      value={item.formattedAmount}
-                      onChange={(e) => handleFormattedChange(e, index)}
-                      onKeyDown={(e) => handleKeyDown(e, index)}
-                      inputRef={el => inputRefs.current[index] = el}
-                      sx={{ width: '150px' }}
-                      inputProps={{
-                        style: { textAlign: 'right' },
-                        inputMode: 'decimal'
-                      }}
-                    />
-                  </ListItem>
-                  <Divider />
-                </React.Fragment>
-              ))}
-            </List>
+            <Box sx={{ mt: 3, mb: 1 }}>
+              <Typography variant="h6" sx={{ mb: 2 }}>
+                Ingresar Valores
+              </Typography>
+              
+              <Grid container spacing={2} sx={{ maxWidth: '600px' }}>
+                {items.map((item, index) => (
+                  <React.Fragment key={index}>
+                    <Grid item xs={8} sx={{ display: 'flex', alignItems: 'center' }}>
+                      <Typography variant="body1">{item.name}</Typography>
+                    </Grid>
+                    <Grid item xs={4}>
+                      <TextField
+                        fullWidth
+                        variant="outlined"
+                        size="small"
+                        type="text"
+                        value={item.formattedAmount}
+                        onChange={(e) => handleFormattedChange(e, index)}
+                        onKeyDown={(e) => handleKeyDown(e, index)}
+                        inputRef={el => inputRefs.current[index] = el}
+                        sx={{
+                          '& .MuiInputBase-root': {
+                            height: '40px'
+                          },
+                          '& .MuiOutlinedInput-input': {
+                            textAlign: 'right',
+                            padding: '8px 12px'
+                          }
+                        }}
+                        inputProps={{
+                          inputMode: 'decimal'
+                        }}
+                      />
+                    </Grid>
+                  </React.Fragment>
+                ))}
+              </Grid>
+              
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 2, fontStyle: 'italic' }}>
+                Ingrese los montos correspondientes a cada concepto
+              </Typography>
+            </Box>
             
             <Box sx={{ mt: 3 }}>
               <Typography variant="subtitle1" gutterBottom>
