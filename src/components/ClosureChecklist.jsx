@@ -141,39 +141,35 @@ function ClosureChecklist() {
    * @param {Function} setFormattedValue - Función para establecer el valor formateado
    * @param {string} prevValue - El valor anterior formateado (opcional)
    */
-  const handleFormattedChange = (value, index, prevValue = '') => {
+  const handleFormattedChange = (e, index) => {
+    const value = e.target.value;
+    const prevItem = items[index];
+    
     // Si es un valor vacío, reiniciar ambos estados
     if (value === '') {
       const newItems = [...items];
-      newItems[index].amount = '';
-      newItems[index].formattedAmount = '';
+      newItems[index] = { ...prevItem, amount: '', formattedAmount: '' };
       setItems(newItems);
       return;
     }
     
-    // Detectar si se acaba de agregar un punto (probablemente desde el teclado numérico)
-    const justAddedDot = value.endsWith('.') && !prevValue.endsWith(',');
+    // Validar que solo se ingresen números, comas y puntos
+    const regex = /^[0-9,.]*$/;
+    if (!regex.test(value)) return;
     
-    // Conservar los puntos de miles existentes y solo convertir el último punto a coma si se acaba de agregar
-    let processedValue;
-    if (justAddedDot) {
-      // Si se acaba de agregar un punto al final, convertirlo en coma
-      processedValue = value.slice(0, -1) + ',';
-    } else {
-      // De lo contrario, mantener el valor tal como está
-      processedValue = value;
-    }
+    // Detectar si se acaba de agregar un punto (probablemente desde el teclado numérico)
+    const justAddedDot = value.endsWith('.') && !prevItem.formattedAmount.endsWith(',');
+    
+    // Procesar el valor para manejar el punto/coma decimal
+    let processedValue = justAddedDot ? value.slice(0, -1) + ',' : value;
     
     // Eliminar cualquier caracter que no sea dígito, punto o coma
-    const cleanValue = processedValue.replace(/[^0-9.,]/g, '');
-    
-    // Verificar si ya existe una coma decimal
-    const hasDecimal = cleanValue.includes(',');
+    const cleanValue = processedValue.replace(/[^0-9,.]/g, '');
     
     // Separar la parte entera y decimal (si existe)
     let [integerPart, decimalPart] = cleanValue.split(',');
     
-    // Eliminar cualquier punto existente en la parte entera para reformatearla
+    // Eliminar cualquier punto existente en la parte entera
     integerPart = integerPart ? integerPart.replace(/\./g, '') : '';
     
     // Formatear la parte entera con puntos cada 3 dígitos
@@ -191,27 +187,19 @@ function ClosureChecklist() {
       displayValue += ',' + decimalPart;
     }
     
-    // Para cálculos internos, convertir a formato numérico estándar
-    let numericValue = integerPart;
-    if (decimalPart !== undefined) {
-      numericValue += '.' + decimalPart;
-    }
+    // Convertir a número para cálculos internos
+    const numericStr = integerPart + (decimalPart !== undefined ? '.' + decimalPart : '');
+    const numericValue = parseFloat(numericStr) || 0;
     
-    // Guardar ambos valores: el numérico para cálculos y el formateado para mostrar
-    const parsedValue = parseFloat(numericValue);
+    // Actualizar el estado
+    const newItems = [...items];
+    newItems[index] = {
+      ...prevItem,
+      amount: numericValue.toString(),
+      formattedAmount: displayValue
+    };
     
-    if (!isNaN(parsedValue)) {
-      const newItems = [...items];
-      newItems[index].amount = parsedValue.toString();
-      newItems[index].formattedAmount = displayValue;
-      setItems(newItems);
-    } else if (displayValue === '' || displayValue === ',') {
-      // Si solo hay una coma o está vacío
-      const newItems = [...items];
-      newItems[index].amount = '';
-      newItems[index].formattedAmount = displayValue;
-      setItems(newItems);
-    }
+    setItems(newItems);
   };
   
   /**
@@ -786,7 +774,18 @@ function ClosureChecklist() {
                         type="text"
                         value={item.formattedAmount}
                         onChange={(e) => handleFormattedChange(e, index)}
-                        onKeyDown={(e) => handleKeyDown(e, index)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            const nextIndex = index + 1;
+                            if (nextIndex < items.length) {
+                              const nextInput = inputRefs.current[nextIndex];
+                              if (nextInput) {
+                                nextInput.focus();
+                              }
+                            }
+                          }
+                        }}
                         inputRef={el => inputRefs.current[index] = el}
                         sx={{
                           '& .MuiInputBase-root': {
