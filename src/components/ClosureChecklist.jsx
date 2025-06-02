@@ -21,7 +21,10 @@ import {
   AppBar,
   Card,
   CardContent,
-  InputAdornment
+  InputAdornment,
+  Switch,
+  FormControlLabel,
+  Tooltip
 } from '@mui/material';
 import { saveAs } from 'file-saver';
 import { useRef, useState, Fragment } from 'react';
@@ -92,6 +95,9 @@ function ClosureChecklist() {
   
   /** @type {[{name: string, amount: string, formattedAmount: string}, Function]} Estado para el nuevo item que se está ingresando */
   const [newItem, setNewItem] = useState({ name: '', amount: '', formattedAmount: '' });
+  
+  /** @type {[boolean, Function]} Estado para controlar si el ajuste es egreso (true) o ingreso (false) */
+  const [isAjusteEgreso, setIsAjusteEgreso] = useState(false);
   
   /** @type {React.MutableRefObject<HTMLInputElement[]>} Referencias a los campos de entrada para navegación con teclado */
   const inputRefs = useRef([]);
@@ -210,7 +216,14 @@ function ClosureChecklist() {
     }
     
     // Convertir a número para asegurar que sea un formato válido
-    const parsedValue = parseFloat(numericValue);
+    let parsedValue = parseFloat(numericValue);
+    
+    // Si es el campo Ajuste y está marcado como egreso, hacer el valor negativo
+    if (prevItem.name === 'Ajuste' && isAjusteEgreso && parsedValue > 0) {
+      parsedValue = -parsedValue;
+    } else if (prevItem.name === 'Ajuste' && !isAjusteEgreso && parsedValue < 0) {
+      parsedValue = Math.abs(parsedValue);
+    }
     
     // Actualizar el estado con el nuevo valor
     const newItems = [...items];
@@ -393,6 +406,37 @@ function ClosureChecklist() {
   };
   
   /**
+   * @description Maneja el cambio en el switch de tipo de ajuste
+   * @param {React.ChangeEvent<HTMLInputElement>} e - Evento de cambio
+   */
+  const handleAjusteTypeChange = (e) => {
+    const isEgreso = e.target.checked;
+    setIsAjusteEgreso(isEgreso);
+    
+    // Actualizar el valor del ajuste si ya tiene un monto
+    const ajusteIndex = items.findIndex(item => item.name === 'Ajuste');
+    if (ajusteIndex >= 0 && items[ajusteIndex].amount) {
+      const ajusteItem = items[ajusteIndex];
+      let numericAmount = parseFloat(ajusteItem.amount);
+      
+      if (numericAmount === 0) return;
+      
+      // Cambiar el signo del valor según corresponda
+      if ((isEgreso && numericAmount > 0) || (!isEgreso && numericAmount < 0)) {
+        numericAmount = -numericAmount;
+        
+        const newItems = [...items];
+        newItems[ajusteIndex] = {
+          ...ajusteItem,
+          amount: numericAmount.toString()
+        };
+        
+        setItems(newItems);
+      }
+    }
+  };
+  
+  /**
    * @description Guarda el checklist actual en un archivo de texto
    */
   const handleSaveToFile = () => {
@@ -405,9 +449,11 @@ function ClosureChecklist() {
     // Crear el contenido del archivo
     const content = itemsWithValues.map(item => {
       // Para los items individuales, usar el formato ya existente o formatear
-      const formattedValue = item.formattedAmount || formatARSWithoutSymbol(item.amount || 0);
-      return `${item.name.padEnd(25)}: $${formattedValue}`;
-    }).join('\n') + `\n\nTOTAL GENERAL: $${formatARSWithoutSymbol(total)}`;
+      const amount = parseFloat(item.amount);
+      const isNegative = amount < 0;
+      const formattedValue = item.formattedAmount || formatARSWithoutSymbol(Math.abs(amount) || 0);
+      return `${item.name.padEnd(25)}: ${isNegative ? '-$' : '$'}${formattedValue}`;
+    }).join('\n') + `\n\nTOTAL GENERAL: ${total < 0 ? '-$' : '$'}${formatARSWithoutSymbol(Math.abs(total))}`;
     
     const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
     saveAs(blob, `${formattedDate} Cierre de caja.txt`);
@@ -539,14 +585,21 @@ function ClosureChecklist() {
         
         console.log('Items finales:', initialItems); // Depuración
         
-        // Forzar una actualización completa del estado
+        // Verificar si hay un ajuste con valor negativo para actualizar el switch
+        const ajusteItem = initialItems.find(item => item.name === 'Ajuste');
+        if (ajusteItem && ajusteItem.amount) {
+          const ajusteValue = parseFloat(ajusteItem.amount);
+          setIsAjusteEgreso(ajusteValue < 0);
+          console.log('Ajuste detectado:', ajusteValue, 'Es egreso:', ajusteValue < 0); // Depuración
+        }
+        
+        // Limpiar primero
         setItems([]);
         
-        // Actualizar con los nuevos items después de un breve retraso
+        // Un pequeño timeout para asegurarnos que el estado se limpie primero
         setTimeout(() => {
           setItems(initialItems);
-          console.log('Estado actualizado con items:', initialItems);
-          
+          console.log('Estado actualizado con items cargados del archivo'); // Depuración
           // Mostrar mensaje de éxito
           alert('Planilla cargada correctamente.');
         }, 50);
@@ -1087,8 +1140,28 @@ function ClosureChecklist() {
               <Grid container spacing={2} sx={{ maxWidth: '100%' }}>
                 {items.map((item, index) => (
                   <Fragment key={index}>
-                    <Grid item xs={7} sm={8} sx={{ display: 'flex', alignItems: 'center' }}>
+                    <Grid item xs={7} sm={8} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                       <Typography variant="body1">{item.name}</Typography>
+                      
+                      {/* Switch para el campo Ajuste */}
+                      {item.name === 'Ajuste' && (
+                        <Tooltip title={isAjusteEgreso ? "Egreso (valor negativo)" : "Ingreso (valor positivo)"}>
+                          <FormControlLabel
+                            control={
+                              <Switch
+                                size="small"
+                                checked={isAjusteEgreso}
+                                onChange={handleAjusteTypeChange}
+                                color="primary"
+                              />
+                            }
+                             label={<Typography variant="caption" color="text.secondary">
+                              {isAjusteEgreso ? "Egreso" : "Ingreso"}
+                            </Typography>}
+                            sx={{ mb: 0, ml: 0 }}
+                          />
+                        </Tooltip>
+                      )}
                     </Grid>
                     <Grid item xs={5} sm={4}>
                       <TextField
@@ -1096,10 +1169,12 @@ function ClosureChecklist() {
                         variant="outlined"
                         size="small"
                         type="text"
-                        value={item.amount ? `$${item.formattedAmount || formatARS(parseFloat(item.amount))}` : ''}
+                        value={item.amount ? `${parseFloat(item.amount) < 0 ? '-$' : '$'}${item.formattedAmount || formatARS(Math.abs(parseFloat(item.amount)))}` : ''}
                         onChange={(e) => {
                           // Remover el símbolo $ si existe antes de procesar
-                          const value = e.target.value.startsWith('$') ? e.target.value.substring(1) : e.target.value;
+                          let value = e.target.value;
+                          if (value.startsWith('$')) value = value.substring(1);
+                          if (value.startsWith('-$')) value = value.substring(2);
                           handleFormattedChange({ target: { value } }, index);
                         }}
                         onKeyDown={(e) => {
@@ -1158,10 +1233,12 @@ function ClosureChecklist() {
                 <TextField
                   fullWidth
                   label="Monto"
-                  value={newItem.amount ? `$${newItem.formattedAmount}` : ''}
+                  value={newItem.amount ? `${parseFloat(newItem.amount) < 0 ? '-$' : '$'}${newItem.formattedAmount}` : ''}
                   onChange={(e) => {
                     // Remover el símbolo $ si existe antes de procesar
-                    const value = e.target.value.startsWith('$') ? e.target.value.substring(1) : e.target.value;
+                    let value = e.target.value;
+                    if (value.startsWith('$')) value = value.substring(1);
+                    if (value.startsWith('-$')) value = value.substring(2);
                     handleNewItemFormattedChange(value, newItem.formattedAmount);
                   }}
                   onKeyDown={handleNewItemKeyDown}
