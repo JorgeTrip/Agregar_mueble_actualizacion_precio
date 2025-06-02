@@ -109,15 +109,21 @@ function ClosureChecklist() {
    * @returns {string} El valor formateado como moneda argentina con punto como separador de miles y coma para decimales
    */
   const formatARS = (value) => {
-    if (value === '' || value === null || value === undefined) return '';
+    if (value === '' || value === null || value === undefined || isNaN(value)) return '';
+    
+    // Convertir a número por si es string
+    const numValue = typeof value === 'string' ? parseFloat(value.replace(/\./g, '').replace(',', '.')) : Number(value);
+    
+    if (isNaN(numValue)) return '';
     
     // Usar Intl.NumberFormat para formatear con puntos y comas
     const formatted = new Intl.NumberFormat('es-AR', {
-      style: 'decimal',
-      useGrouping: true,
+      style: 'currency',
+      currency: 'ARS',
       minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    }).format(value);
+      maximumFractionDigits: 2,
+      currencyDisplay: 'symbol'
+    }).format(numValue);
     
     return formatted;
   };
@@ -135,17 +141,15 @@ function ClosureChecklist() {
   };
 
   /**
-   * @description Maneja el cambio en un campo numérico con formato
-   * @param {string} value - El valor ingresado
-   * @param {Function} setRawValue - Función para establecer el valor crudo
-   * @param {Function} setFormattedValue - Función para establecer el valor formateado
-   * @param {string} prevValue - El valor anterior formateado (opcional)
+   * @description Maneja el cambio en campos con formato de moneda
+   * @param {React.ChangeEvent} e - Evento de cambio
+   * @param {number} index - Índice del ítem que se está editando
    */
   const handleFormattedChange = (e, index) => {
     const value = e.target.value;
     const prevItem = items[index];
     
-    // Si es un valor vacío, reiniciar ambos estados
+    // Si el valor está vacío, reiniciar ambos estados
     if (value === '') {
       const newItems = [...items];
       newItems[index] = { ...prevItem, amount: '', formattedAmount: '' };
@@ -153,24 +157,39 @@ function ClosureChecklist() {
       return;
     }
     
-    // Validar que solo se ingresen números, comas y puntos
+    // Validar que solo contenga dígitos, puntos o comas
     const regex = /^[0-9,.]*$/;
     if (!regex.test(value)) return;
     
     // Detectar si se acaba de agregar un punto (probablemente desde el teclado numérico)
-    const justAddedDot = value.endsWith('.') && !prevItem.formattedAmount.endsWith(',');
+    const justAddedDot = value.endsWith('.') && !prevItem.formattedAmount?.endsWith(',');
     
-    // Procesar el valor para manejar el punto/coma decimal
-    let processedValue = justAddedDot ? value.slice(0, -1) + ',' : value;
+    // Conservar los puntos de miles existentes y solo convertir el último punto a coma si se acaba de agregar
+    let processedValue;
+    if (justAddedDot) {
+      // Si se acaba de agregar un punto al final, convertirlo en coma
+      processedValue = value.slice(0, -1) + ',';
+    } else {
+      // De lo contrario, mantener el valor tal como está
+      processedValue = value;
+    }
     
     // Eliminar cualquier caracter que no sea dígito, punto o coma
     const cleanValue = processedValue.replace(/[^0-9,.]/g, '');
     
+    // Verificar si ya existe una coma decimal
+    const hasDecimal = cleanValue.includes(',');
+    
     // Separar la parte entera y decimal (si existe)
     let [integerPart, decimalPart] = cleanValue.split(',');
     
-    // Eliminar cualquier punto existente en la parte entera
+    // Eliminar cualquier punto existente en la parte entera para reformatearla
     integerPart = integerPart ? integerPart.replace(/\./g, '') : '';
+    
+    // Limitar la parte decimal a 2 dígitos
+    if (decimalPart !== undefined) {
+      decimalPart = decimalPart.substring(0, 2);
+    }
     
     // Formatear la parte entera con puntos cada 3 dígitos
     let formattedInteger = '';
@@ -187,21 +206,25 @@ function ClosureChecklist() {
       displayValue += ',' + decimalPart;
     }
     
-    // Convertir a número para cálculos internos
-    const numericStr = integerPart + (decimalPart !== undefined ? '.' + decimalPart : '');
-    const numericValue = parseFloat(numericStr) || 0;
+    // Para cálculos internos, convertir a formato numérico estándar
+    let numericValue = integerPart;
+    if (decimalPart !== undefined) {
+      numericValue += '.' + decimalPart;
+    }
     
-    // Actualizar el estado
+    // Convertir a número para asegurar que sea un formato válido
+    const parsedValue = parseFloat(numericValue);
+    
+    // Actualizar el estado con el nuevo valor
     const newItems = [...items];
-    newItems[index] = {
-      ...prevItem,
-      amount: numericValue.toString(),
+    newItems[index] = { 
+      ...prevItem, 
+      amount: !isNaN(parsedValue) ? parsedValue.toString() : '',
       formattedAmount: displayValue
     };
-    
     setItems(newItems);
   };
-  
+
   /**
    * @description Maneja el cambio en un campo numérico con formato para el nuevo item
    * @param {string} value - El valor ingresado
@@ -472,11 +495,12 @@ function ClosureChecklist() {
         // Actualizar los items con los totales encontrados
         const updatedItems = items.map(item => {
           if (item.name in totales) {
-            const amount = totales[item.name].toString();
+            const amountNum = parseFloat(totales[item.name]);
+            const formattedAmount = formatARS(amountNum);
             return {
               ...item,
-              amount,
-              formattedAmount: formatARS(parseFloat(amount))
+              amount: amountNum.toString(),
+              formattedAmount: formattedAmount
             };
           }
           return item;
@@ -772,8 +796,12 @@ function ClosureChecklist() {
                         variant="outlined"
                         size="small"
                         type="text"
-                        value={item.formattedAmount}
-                        onChange={(e) => handleFormattedChange(e, index)}
+                        value={item.amount ? `$${item.formattedAmount}` : ''}
+                        onChange={(e) => {
+                          // Remover el símbolo $ si existe antes de procesar
+                          const value = e.target.value.startsWith('$') ? e.target.value.substring(1) : e.target.value;
+                          handleFormattedChange({ target: { value } }, index);
+                        }}
                         onKeyDown={(e) => {
                           if (e.key === 'Enter') {
                             e.preventDefault();
@@ -824,8 +852,12 @@ function ClosureChecklist() {
                 />
                 <TextField
                   label="Monto"
-                  value={newItem.formattedAmount}
-                  onChange={handleNewItemAmountChange}
+                  value={newItem.amount ? `$${newItem.formattedAmount}` : ''}
+                  onChange={(e) => {
+                    // Remover el símbolo $ si existe antes de procesar
+                    const value = e.target.value.startsWith('$') ? e.target.value.substring(1) : e.target.value;
+                    handleNewItemFormattedChange(value, newItem.formattedAmount);
+                  }}
                   onKeyDown={handleNewItemKeyDown}
                   sx={{ width: '150px' }}
                   inputProps={{
