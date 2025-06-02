@@ -1331,57 +1331,8 @@ function ClosureChecklist() {
                   })}
                 </Grid>
               </Box>
-              
-              <Typography variant="body2" color="text.secondary" sx={{ mt: 2, fontStyle: 'italic' }}>
-                Ingrese los montos correspondientes a cada concepto
-              </Typography>
             </Box>
-            
-            <Box sx={{ mt: 3 }}>
-              <Typography variant="subtitle1" gutterBottom>
-                Agregar Concepto Personalizado
-              </Typography>
-              <Box sx={{ 
-                display: 'flex', 
-                flexDirection: { xs: 'column', sm: 'row' },
-                gap: 2, 
-                mb: 2 
-              }}>
-                <TextField
-                  fullWidth
-                  label="Concepto"
-                  value={newItem.name}
-                  onChange={(e) => setNewItem({ ...newItem, name: e.target.value })}
-                  onKeyDown={handleNewItemKeyDown}
-                />
-                <TextField
-                  fullWidth
-                  label="Monto"
-                  value={newItem.amount ? `${parseFloat(newItem.amount) < 0 ? '-$' : '$'}${newItem.formattedAmount}` : ''}
-                  onChange={(e) => {
-                    // Remover el símbolo $ si existe antes de procesar
-                    let value = e.target.value;
-                    if (value.startsWith('$')) value = value.substring(1);
-                    if (value.startsWith('-$')) value = value.substring(2);
-                    handleNewItemFormattedChange(value, newItem.formattedAmount);
-                  }}
-                  onKeyDown={handleNewItemKeyDown}
-                  sx={{
-                    width: { xs: '100%', sm: '150px' },
-                    '& .MuiOutlinedInput-input': {
-                      textAlign: 'right'
-                    }
-                  }}
-                  InputProps={{
-                    startAdornment: <InputAdornment position="start">$</InputAdornment>,
-                  }}
-                  inputProps={{
-                    inputMode: 'decimal'
-                  }}
-                />
-              </Box>
-            </Box>
-            
+                  
             <Box sx={{ 
               display: 'flex', 
               flexDirection: { xs: 'column', sm: 'row' },
@@ -1389,16 +1340,6 @@ function ClosureChecklist() {
               gap: 1,
               mt: 2 
             }}>
-              <Button
-                fullWidth
-                variant="outlined"
-                color="secondary"
-                onClick={handleAddItem}
-                disabled={!newItem.name || !newItem.amount}
-                sx={{ mb: { xs: 1, sm: 0 } }}
-              >
-                Agregar Concepto
-              </Button>
               <Button 
                 fullWidth
                 variant="outlined" 
