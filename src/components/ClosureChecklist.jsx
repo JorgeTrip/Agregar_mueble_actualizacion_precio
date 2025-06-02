@@ -1119,31 +1119,9 @@ function ClosureChecklist() {
           </Paper>
         </Grid>
       )}
-      {activeTab === 0 && (
-        <Grid item xs={12}>
-          <Paper sx={{ p: 2, mt: 2 }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-              <Typography variant="h6">Total General</Typography>
-              <Typography variant="h6">
-                ${formatARS(total)}
-              </Typography>
-            </Box>
-          </Paper>
-        </Grid>
-      )}
+
       
-      {activeTab === 1 && (
-        <Grid item xs={12}>
-          <Paper sx={{ p: 2, mt: 2 }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-              <Typography variant="h6">Total General</Typography>
-              <Typography variant="h5" sx={{ fontWeight: 'bold' }}>
-                {formatARS(total)}
-              </Typography>
-            </Box>
-          </Paper>
-        </Grid>
-      )}
+
     </Box>
   );
 }
