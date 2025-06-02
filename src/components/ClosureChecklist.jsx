@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { 
   Box, 
   Typography, 
@@ -566,98 +567,303 @@ function ClosureChecklist() {
    * @description Renderiza la planilla de papel con los datos cargados
    * @returns {JSX.Element} Componente de planilla de papel
    */
-  const renderPlanilla = () => (
-    <Box sx={{ mt: 2 }}>
-      <Card variant="outlined" sx={{ mb: 3, backgroundColor: '#fffde7' }}>
-        <CardContent>
-          <Box sx={{ mb: 3, textAlign: 'center' }}>
-            <Typography variant="h5" component="h2" gutterBottom sx={{ fontWeight: 'bold' }}>
-              PLANILLA DE CIERRE DE CAJA
-            </Typography>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-              <Typography variant="body1">
-                <strong>FECHA:</strong> {sinergieData.fecha || '__________'}
-              </Typography>
-              <Typography variant="body1">
-                <strong>TURNO:</strong> {sinergieData.turno || '__________'}
-              </Typography>
-              <Typography variant="body1">
-                <strong>HORA:</strong> {sinergieData.hora || '__________'}
-              </Typography>
-            </Box>
-            <Typography variant="body1" align="left" sx={{ mb: 2 }}>
-              <strong>CAJERO/A:</strong> {sinergieData.cajero || '__________'}
-            </Typography>
-          </Box>
-          
-          <TableContainer>
-            <Table size="small" sx={{ border: '1px solid #e0e0e0' }}>
-              <TableHead>
-                <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
-                  <TableCell sx={{ fontWeight: 'bold', border: '1px solid #e0e0e0' }}>CONCEPTO</TableCell>
-                  <TableCell align="right" sx={{ fontWeight: 'bold', border: '1px solid #e0e0e0' }}>IMPORTE</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {items.map((item, index) => (
-                  <TableRow key={index}>
-                    <TableCell sx={{ border: '1px solid #e0e0e0' }}>{item.name}</TableCell>
-                    <TableCell align="right" sx={{ border: '1px solid #e0e0e0' }}>
-                      {item.formattedAmount ? `$${item.formattedAmount}` : '__________'}
-                    </TableCell>
-                  </TableRow>
-                ))}
-                <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
-                  <TableCell sx={{ fontWeight: 'bold', border: '1px solid #e0e0e0' }}>TOTAL</TableCell>
-                  <TableCell align="right" sx={{ fontWeight: 'bold', border: '1px solid #e0e0e0' }}>
-                    ${formatARS(total)}
-                  </TableCell>
-                </TableRow>
-              </TableBody>
-            </Table>
-          </TableContainer>
-          
-          <Box sx={{ mt: 3, display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap' }}>
-            <Box sx={{ mt: 2, width: '48%' }}>
-              <Typography variant="body2" sx={{ mb: 1 }}>
-                <strong>OBSERVACIONES:</strong>
-              </Typography>
-              <Box sx={{ border: '1px solid #e0e0e0', minHeight: '80px', p: 1 }}>
-                {sinergieData.observaciones || '________________________________________________________________'}
+
+
+  const renderPlanilla = () => {
+    // Crear un tema que fuerce los estilos claros independientemente del tema global
+    const planillaTheme = createTheme({
+      // Deshabilitar transiciones para evitar parpadeos
+      transitions: {
+        create: () => 'none',
+      },
+      // Forzar modo claro explícitamente
+      palette: {
+        mode: 'light',
+        background: {
+          paper: '#fffde7',
+          default: '#fffde7'
+        },
+        text: {
+          primary: 'rgba(0, 0, 0, 0.87)',
+          secondary: 'rgba(0, 0, 0, 0.6)',
+          disabled: 'rgba(0, 0, 0, 0.38)'
+        }
+      },
+      // Sobrescribir estilos de componentes
+      components: {
+        // Estilos para el contenedor principal
+        MuiPaper: {
+          styleOverrides: {
+            root: {
+              backgroundColor: '#fffde7 !important',
+              backgroundImage: 'none !important',
+              '& *': {
+                color: 'rgba(0, 0, 0, 0.87) !important'
+              }
+            }
+          }
+        },
+        // Estilos para la tarjeta
+        MuiCard: {
+          styleOverrides: {
+            root: {
+              backgroundColor: '#fffde7 !important',
+              color: 'rgba(0, 0, 0, 0.87) !important',
+              '& .MuiCardContent-root': {
+                backgroundColor: '#fffde7 !important',
+                color: 'rgba(0, 0, 0, 0.87) !important',
+                padding: '16px !important',
+                '&:last-child': {
+                  paddingBottom: '16px !important'
+                }
+              }
+            }
+          }
+        },
+        // Estilos para la tipografía
+        MuiTypography: {
+          styleOverrides: {
+            root: {
+              color: 'rgba(0, 0, 0, 0.87) !important',
+              '&.MuiTypography-h5': {
+                fontWeight: 'bold !important',
+                textAlign: 'center !important',
+                marginBottom: '16px !important'
+              }
+            }
+          }
+        },
+        // Estilos para la tabla
+        MuiTable: {
+          styleOverrides: {
+            root: {
+              border: '1px solid rgba(0, 0, 0, 0.12) !important',
+              '&, & *': {
+                color: 'rgba(0, 0, 0, 0.87) !important',
+                borderColor: 'rgba(0, 0, 0, 0.23) !important',
+                backgroundColor: 'transparent !important'
+              }
+            }
+          }
+        },
+        // Estilos para las filas de la tabla
+        MuiTableRow: {
+          styleOverrides: {
+            head: {
+              backgroundColor: '#f5f5f5 !important',
+              '& .MuiTableCell-head': {
+                color: 'rgba(0, 0, 0, 0.87) !important',
+                fontWeight: 'bold !important',
+                backgroundColor: '#f5f5f5 !important'
+              }
+            },
+            root: {
+              backgroundColor: '#fffde7 !important',
+              '&:nth-of-type(odd)': {
+                backgroundColor: 'rgba(0, 0, 0, 0.02) !important'
+              },
+              '&:hover': {
+                backgroundColor: 'rgba(0, 0, 0, 0.04) !important'
+              },
+              '& .MuiTableCell-root': {
+                color: 'rgba(0, 0, 0, 0.87) !important',
+                borderColor: 'rgba(0, 0, 0, 0.12) !important',
+                backgroundColor: 'transparent !important'
+              }
+            }
+          }
+        },
+        // Estilos para las celdas de la tabla
+        MuiTableCell: {
+          styleOverrides: {
+            root: {
+              borderColor: 'rgba(0, 0, 0, 0.12) !important',
+              color: 'rgba(0, 0, 0, 0.87) !important',
+              backgroundColor: 'transparent !important',
+              '&.MuiTableCell-head': {
+                color: 'rgba(0, 0, 0, 0.87) !important',
+                fontWeight: 'bold !important',
+                backgroundColor: '#f5f5f5 !important'
+              }
+            }
+          }
+        },
+        // Estilos para el contenedor de la tabla
+        MuiTableContainer: {
+          styleOverrides: {
+            root: {
+              backgroundColor: 'transparent !important',
+              '& *': {
+                backgroundColor: 'transparent !important'
+              }
+            }
+          }
+        },
+        // Estilos para los botones
+        MuiButton: {
+          styleOverrides: {
+            root: {
+              color: '#1976d2 !important',
+              '&:hover': {
+                backgroundColor: 'rgba(25, 118, 210, 0.04) !important'
+              }
+            },
+            contained: {
+              color: '#fff !important',
+              backgroundColor: '#1976d2 !important',
+              '&:hover': {
+                backgroundColor: '#1565c0 !important'
+              }
+            }
+          }
+        }
+      }
+    });
+
+    return (
+      <Box sx={{ 
+        mt: 2,
+        '& .MuiPaper-root': {
+          backgroundColor: '#fffde7 !important',
+          backgroundImage: 'none !important'
+        }
+      }}>
+        <ThemeProvider theme={planillaTheme}>
+          <Card 
+            variant="outlined" 
+            sx={{ 
+              mb: 3,
+              backgroundColor: '#fffde7 !important',
+              '& .MuiCardContent-root': {
+                backgroundColor: '#fffde7 !important'
+              }
+            }}
+          >
+            <CardContent sx={{ backgroundColor: '#fffde7 !important' }}>
+              <Box sx={{ mb: 3, textAlign: 'center' }}>
+                <Typography variant="h5" component="h2" gutterBottom sx={{ fontWeight: 'bold' }}>
+                  PLANILLA DE CIERRE DE CAJA
+                </Typography>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+                  <Typography variant="body1">
+                    <strong>FECHA:</strong> {sinergieData.fecha || '__________'}
+                  </Typography>
+                  <Typography variant="body1">
+                    <strong>TURNO:</strong> {sinergieData.turno || '__________'}
+                  </Typography>
+                  <Typography variant="body1">
+                    <strong>HORA:</strong> {sinergieData.hora || '__________'}
+                  </Typography>
+                </Box>
+                <Typography variant="body1" align="left" sx={{ mb: 2 }}>
+                  <strong>CAJERO/A:</strong> {sinergieData.cajero || '__________'}
+                </Typography>
               </Box>
-            </Box>
-            <Box sx={{ mt: 2, width: '48%' }}>
-              <Typography variant="body2" sx={{ mb: 1 }}>
-                <strong>FIRMA RESPONSABLE:</strong>
-              </Typography>
-              <Box sx={{ borderBottom: '1px solid #000', minHeight: '30px', mb: 2 }}></Box>
-              <Typography variant="body2" align="center">
-                Aclaración y Firma
-              </Typography>
-            </Box>
-          </Box>
-        </CardContent>
-      </Card>
-      
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
-        <Button 
-          variant="outlined" 
-          onClick={() => setActiveTab(0)}
-          startIcon={<DescriptionIcon />}
-        >
-          Volver a cargar archivo
-        </Button>
-        <Button 
-          variant="contained" 
-          color="primary" 
-          onClick={handleSaveToFile}
-          disabled={!fileLoaded}
-        >
-          Guardar Planilla
-        </Button>
+              
+              <TableContainer>
+                <Table size="small" sx={{ 
+                  border: '1px solid #e0e0e0',
+                  '& .MuiTableCell-root': {
+                    color: 'rgba(0, 0, 0, 0.87)',
+                    borderColor: 'rgba(0, 0, 0, 0.23)'
+                  }
+                }}>
+                  <TableHead>
+                    <TableRow sx={{ 
+                      '& .MuiTableCell-root': {
+                        backgroundColor: '#f5f5f5',
+                        color: 'rgba(0, 0, 0, 0.87)'
+                      }
+                    }}>
+                      <TableCell sx={{ fontWeight: 'bold', border: '1px solid #e0e0e0', fontSize: 16, padding: '8px' }}>CONCEPTO</TableCell>
+                      <TableCell align="right" sx={{ fontWeight: 'bold', border: '1px solid #e0e0e0', fontSize: 16, padding: '8px' }}>IMPORTE</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {items.map((item, index) => (
+                      <TableRow key={index}>
+                        <TableCell sx={{ border: '1px solid #e0e0e0', fontSize: 14, padding: '8px' }}>{item.name}</TableCell>
+                        <TableCell align="right" sx={{ border: '1px solid #e0e0e0', fontSize: 14, padding: '8px' }}>
+                          {item.amount ? formatARS(item.amount) : '__________'}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    <TableRow sx={{ 
+                      '& .MuiTableCell-root': {
+                        backgroundColor: '#f5f5f5',
+                        color: 'rgba(0, 0, 0, 0.87)'
+                      }
+                    }}>
+                      <TableCell sx={{ fontWeight: 'bold', border: '1px solid #e0e0e0' }}>TOTAL</TableCell>
+                      <TableCell align="right" sx={{ fontWeight: 'bold', border: '1px solid #e0e0e0' }}>
+                        {formatARS(total)}
+                      </TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              </TableContainer>
+              
+              <Box sx={{ mt: 3, display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap' }}>
+                <Box sx={{ mt: 2, width: '48%' }}>
+                  <Typography variant="body2" sx={{ mb: 1 }}>
+                    <strong>OBSERVACIONES:</strong>
+                  </Typography>
+                  <Box sx={{ border: '1px solid #e0e0e0', minHeight: '80px', p: 1 }}>
+                    {sinergieData.observaciones || '________________________________________________________________'}
+                  </Box>
+                </Box>
+                <Box sx={{ mt: 2, width: '48%' }}>
+                  <Typography variant="body2" sx={{ mb: 1 }}>
+                    <strong>FIRMA RESPONSABLE:</strong>
+                  </Typography>
+                  <Box sx={{ borderBottom: '1px solid #000', minHeight: '30px', mb: 2 }}></Box>
+                  <Typography variant="body2" align="center">
+                    Aclaración y Firma
+                  </Typography>
+                </Box>
+              </Box>
+            </CardContent>
+          </Card>
+        </ThemeProvider>
+        
+        <Box sx={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          mt: 2,
+          '& .MuiButton-root': {
+            color: '#1976d2 !important',
+            '&:hover': {
+              backgroundColor: 'rgba(25, 118, 210, 0.04) !important'
+            }
+          },
+          '& .MuiButton-contained': {
+            color: '#fff !important',
+            backgroundColor: '#1976d2 !important',
+            '&:hover': {
+              backgroundColor: '#1565c0 !important'
+            }
+          }
+        }}>
+          <Button 
+            variant="outlined" 
+            onClick={() => setActiveTab(0)}
+            startIcon={<DescriptionIcon />}
+          >
+            Volver a cargar archivo
+          </Button>
+          <Button 
+            variant="contained" 
+            color="primary" 
+            onClick={handleSaveToFile}
+            disabled={!fileLoaded}
+            startIcon={<SaveIcon />}
+          >
+            Guardar Planilla
+          </Button>
+        </Box>
       </Box>
-    </Box>
-  );
+    );
+  };
 
   return (
     <Box sx={{
@@ -945,7 +1151,12 @@ function ClosureChecklist() {
               <TableContainer>
                 <Table size="small" sx={{ '& td, & th': { border: '1px solid #e0e0e0', p: 0.5, fontSize: '0.75rem' } }}>
                   <TableHead>
-                    <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
+                    <TableRow sx={{ 
+                  '& .MuiTableCell-root': {
+                    backgroundColor: '#f5f5f5',
+                    color: 'rgba(0, 0, 0, 0.87)'
+                  }
+                }}>
                       <TableCell sx={{ fontWeight: 'bold' }}>CONCEPTO</TableCell>
                       <TableCell align="right" sx={{ fontWeight: 'bold' }}>IMPORTE</TableCell>
                     </TableRow>
@@ -957,7 +1168,12 @@ function ClosureChecklist() {
                         <TableCell align="right">${item.formattedAmount}</TableCell>
                       </TableRow>
                     ))}
-                    <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
+                    <TableRow sx={{ 
+                  '& .MuiTableCell-root': {
+                    backgroundColor: '#f5f5f5',
+                    color: 'rgba(0, 0, 0, 0.87)'
+                  }
+                }}>
                       <TableCell sx={{ fontWeight: 'bold' }}>TOTAL</TableCell>
                       <TableCell align="right" sx={{ fontWeight: 'bold' }}>${formatARS(total)}</TableCell>
                     </TableRow>
