@@ -21,11 +21,12 @@ import {
   Tab,
   AppBar,
   Card,
-  CardContent
+  CardContent,
+  InputAdornment
 } from '@mui/material';
 import { saveAs } from 'file-saver';
-import { useRef } from 'react';
-import { Upload as UploadIcon, Description as DescriptionIcon } from '@mui/icons-material';
+import React, { useRef, useState } from 'react';
+import { Upload as UploadIcon, Description as DescriptionIcon, Save as SaveIcon } from '@mui/icons-material';
 
 /**
  * @fileoverview Componente para gestionar el checklist de cierre de caja de una farmacia
@@ -646,9 +647,9 @@ function ClosureChecklist() {
     });
 
     return (
-      <Box sx={{ mt: 2 }}>
+      <Box sx={{ mt: 2, width: '100%', maxWidth: '100%' }}>
         <ThemeProvider theme={planillaTheme}>
-          <Card variant="outlined" sx={{ mb: 3 }}>
+          <Card variant="outlined" sx={{ mb: 3, width: '100%', maxWidth: '100%' }}>
             <CardContent>
               <Box sx={{ mb: 3, textAlign: 'center' }}>
                 <Typography variant="h5" component="h2" gutterBottom sx={{ fontWeight: 'bold' }}>
@@ -713,8 +714,8 @@ function ClosureChecklist() {
                 </Table>
               </TableContainer>
               
-              <Box sx={{ mt: 3, display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap' }}>
-                <Box sx={{ mt: 2, width: '48%' }}>
+              <Box sx={{ mt: 3, display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'space-between', gap: 2 }}>
+                <Box sx={{ mt: 2, width: { xs: '100%', sm: '48%' } }}>
                   <Typography variant="body2" sx={{ mb: 1 }}>
                     <strong>OBSERVACIONES:</strong>
                   </Typography>
@@ -722,7 +723,7 @@ function ClosureChecklist() {
                     {sinergieData.observaciones || '________________________________________________________________'}
                   </Box>
                 </Box>
-                <Box sx={{ mt: 2, width: '48%' }}>
+                <Box sx={{ mt: 2, width: { xs: '100%', sm: '48%' } }}>
                   <Typography variant="body2" sx={{ mb: 1 }}>
                     <strong>FIRMA RESPONSABLE:</strong>
                   </Typography>
@@ -736,15 +737,24 @@ function ClosureChecklist() {
           </Card>
         </ThemeProvider>
         
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
+        <Box sx={{ 
+          display: 'flex', 
+          flexDirection: { xs: 'column', sm: 'row' },
+          justifyContent: 'space-between', 
+          gap: 2,
+          mt: 2 
+        }}>
           <Button 
+            fullWidth
             variant="outlined" 
             onClick={() => setActiveTab(0)}
             startIcon={<DescriptionIcon />}
+            sx={{ mb: { xs: 1, sm: 0 } }}
           >
             Volver a cargar archivo
           </Button>
           <Button 
+            fullWidth
             variant="contained" 
             color="primary" 
             onClick={handleSaveToFile}
@@ -760,13 +770,27 @@ function ClosureChecklist() {
 
   return (
     <Box sx={{
-      p: 3, 
-      width: '1000px', 
+      p: { xs: 1, sm: 2, md: 3 }, 
+      width: '100%', 
       maxWidth: '100%',
       boxSizing: 'border-box',
       mx: 'auto',
-      '& .MuiFormControl-root': { mt: 1 }  
-      }}>
+      overflowX: 'hidden',
+      '& .MuiFormControl-root': { mt: 1 },
+      '& .MuiPaper-root': {
+        width: '100%',
+        maxWidth: '100%',
+        boxSizing: 'border-box',
+        '&.MuiPaper-root': {
+          width: '100%',
+          maxWidth: '100%'
+        }
+      },
+      '& .MuiGrid-item': {
+        width: '100%',
+        maxWidth: '100%'
+      }
+    }}>
       <Typography variant="h4" component="h1" gutterBottom sx={{ 
         color: '#90caf9', 
         fontWeight: 'bold', 
@@ -790,13 +814,13 @@ function ClosureChecklist() {
       </AppBar>
 
       {activeTab === 0 && (
-        <Grid item xs={12}>
-          <Paper sx={{ p: 2, mb: 3 }}>
+        <Box sx={{ width: '100%' }}>
+          <Paper sx={{ p: { xs: 1, sm: 2 }, mb: 3, width: '100%' }}>
             <Typography variant="h6" gutterBottom>
               Datos del Turno
             </Typography>
             <Grid container spacing={2} sx={{ mb: 2, '& .MuiFormControl-root': { width: '100%' } }}>
-              <Grid item xs={12} md={3}>
+              <Grid item xs={12} sm={6} md={3}>
                 <Box sx={{ position: 'relative', width: '100%', mt: 0, mb: 1, height: '56px', display: 'flex', alignItems: 'center' }}>
                   <select
                     value={sinergieData.turno}
@@ -844,7 +868,7 @@ function ClosureChecklist() {
                   </Box>
                 </Box>
               </Grid>
-              <Grid item xs={12} md={3}>
+              <Grid item xs={12} sm={6} md={3}>
                 <TextField
                   fullWidth
                   type="date"
@@ -856,7 +880,7 @@ function ClosureChecklist() {
                   }}
                 />
               </Grid>
-              <Grid item xs={12} md={3}>
+              <Grid item xs={12} sm={6} md={3}>
                 <TextField
                   fullWidth
                   type="time"
@@ -868,7 +892,7 @@ function ClosureChecklist() {
                   }}
                 />
               </Grid>
-              <Grid item xs={12} md={3}>
+              <Grid item xs={12} sm={6} md={3}>
                 <TextField
                   fullWidth
                   label="Cajero/a"
@@ -883,13 +907,13 @@ function ClosureChecklist() {
                 Ingresar Valores
               </Typography>
               
-              <Grid container spacing={2} sx={{ maxWidth: '600px' }}>
+              <Grid container spacing={2} sx={{ maxWidth: '100%' }}>
                 {items.map((item, index) => (
                   <React.Fragment key={index}>
-                    <Grid item xs={8} sx={{ display: 'flex', alignItems: 'center' }}>
+                    <Grid item xs={7} sm={8} sx={{ display: 'flex', alignItems: 'center' }}>
                       <Typography variant="body1">{item.name}</Typography>
                     </Grid>
-                    <Grid item xs={4}>
+                    <Grid item xs={5} sm={4}>
                       <TextField
                         fullWidth
                         variant="outlined"
@@ -941,7 +965,12 @@ function ClosureChecklist() {
               <Typography variant="subtitle1" gutterBottom>
                 Agregar Concepto Personalizado
               </Typography>
-              <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+              <Box sx={{ 
+                display: 'flex', 
+                flexDirection: { xs: 'column', sm: 'row' },
+                gap: 2, 
+                mb: 2 
+              }}>
                 <TextField
                   fullWidth
                   label="Concepto"
@@ -950,6 +979,7 @@ function ClosureChecklist() {
                   onKeyDown={handleNewItemKeyDown}
                 />
                 <TextField
+                  fullWidth
                   label="Monto"
                   value={newItem.amount ? `$${newItem.formattedAmount}` : ''}
                   onChange={(e) => {
@@ -958,48 +988,57 @@ function ClosureChecklist() {
                     handleNewItemFormattedChange(value, newItem.formattedAmount);
                   }}
                   onKeyDown={handleNewItemKeyDown}
-                  sx={{ width: '150px' }}
+                  sx={{
+                    width: { xs: '100%', sm: '150px' },
+                    '& .MuiOutlinedInput-input': {
+                      textAlign: 'right'
+                    }
+                  }}
+                  InputProps={{
+                    startAdornment: <InputAdornment position="start">$</InputAdornment>,
+                  }}
                   inputProps={{
-                    style: { textAlign: 'right' },
                     inputMode: 'decimal'
                   }}
                 />
-                <Button 
-                  variant="outlined" 
-                  onClick={handleAddItem}
-                  disabled={!newItem.name || !newItem.amount}
-                >
-                  Agregar
-                </Button>
               </Box>
             </Box>
             
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4, pt: 2, borderTop: '1px solid #e0e0e0' }}>
+            <Box sx={{ 
+              display: 'flex', 
+              flexDirection: { xs: 'column', sm: 'row' },
+              justifyContent: 'space-between', 
+              gap: 1,
+              mt: 2 
+            }}>
+              <Button
+                fullWidth
+                variant="outlined"
+                color="secondary"
+                onClick={handleAddItem}
+                disabled={!newItem.name || !newItem.amount}
+                sx={{ mb: { xs: 1, sm: 0 } }}
+              >
+                Agregar Concepto
+              </Button>
               <Button 
+                fullWidth
                 variant="outlined" 
-                color="error"
+                color="primary"
                 onClick={handleResetForm}
+                sx={{ mb: { xs: 1, sm: 0 } }}
               >
                 Limpiar Todo
               </Button>
-              <Box sx={{ display: 'flex', gap: 2 }}>
-                <Button 
-                  variant="outlined" 
-                  color="primary" 
-                  onClick={() => setActiveTab(1)}
-                  startIcon={<DescriptionIcon />}
-                >
-                  Vista Previa
-                </Button>
-                <Button 
-                  variant="contained" 
-                  color="primary" 
-                  onClick={handleSaveToFile}
-                  startIcon={<DescriptionIcon />}
-                >
-                  Guardar Planilla
-                </Button>
-              </Box>
+              <Button 
+                fullWidth
+                variant="contained" 
+                color="primary"
+                onClick={handleSaveToFile}
+                disabled={!total}
+              >
+                Guardar Planilla
+              </Button>
             </Box>
           </Paper>
           
@@ -1011,12 +1050,12 @@ function ClosureChecklist() {
               </Typography>
             </Box>
           </Paper>
-        </Grid>
+        </Box>
       )}
       
       {activeTab === 1 && (
-        <Grid item xs={12}>
-          <Paper sx={{ p: 2, mt: 2 }}>
+        <Box sx={{ width: '100%' }}>
+          <Paper sx={{ p: { xs: 1, sm: 2 }, mt: 2, width: '100%' }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
               <Typography variant="h6">Vista Previa de la Planilla</Typography>
               <Button 
@@ -1084,7 +1123,17 @@ function ClosureChecklist() {
                 <Typography variant="subtitle2" sx={{ fontWeight: 'bold', textAlign: 'center', mb: 1, color: 'rgba(0, 0, 0, 0.87) !important', fontSize: '1.1rem' }}>
                   PLANILLA DE CIERRE DE CAJA
                 </Typography>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1, fontSize: '.8rem', color: 'rgba(0, 0, 0, 0.87) !important' }}>
+                <Box sx={{ 
+                  display: 'flex', 
+                  flexDirection: { xs: 'column', sm: 'row' },
+                  justifyContent: 'space-between', 
+                  mb: 1, 
+                  fontSize: '.8rem', 
+                  color: 'rgba(0, 0, 0, 0.87) !important',
+                  '& > span': {
+                    mb: { xs: 0.5, sm: 0 }
+                  }
+                }}>
                   <span><strong>FECHA:</strong> {new Date().toLocaleDateString()}</span>
                   <span><strong>TURNO:</strong> {sinergieData.turno || '__________'}</span>
                   <span><strong>HORA:</strong> {new Date().toLocaleTimeString()}</span>
@@ -1134,7 +1183,7 @@ function ClosureChecklist() {
             </ThemeProvider>
             </Box>
           </Paper>
-        </Grid>
+        </Box>
       )}
 
       
