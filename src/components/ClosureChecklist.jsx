@@ -1028,94 +1028,111 @@ function ClosureChecklist() {
               </Button>
             </Box>
             
-            <ThemeProvider theme={createTheme({
-              palette: {
-                mode: 'light',
-                background: {
-                  paper: '#fffde7',
-                  default: '#fffde7'
-                },
-                text: {
-                  primary: 'rgba(0, 0, 0, 0.87)',
-                  secondary: 'rgba(0, 0, 0, 0.6)'
-                }
-              },
-              components: {
-                MuiBox: {
-                  styleOverrides: {
-                    root: {
-                      backgroundColor: '#fffde7',
-                      color: 'rgba(0, 0, 0, 0.87) !important'
-                    }
+            <Box sx={{ maxWidth: '400px', mx: 'auto' }}>
+              <ThemeProvider theme={createTheme({
+                palette: {
+                  mode: 'light',
+                  background: {
+                    paper: '#fffde7',
+                    default: '#fffde7'
+                  },
+                  text: {
+                    primary: 'rgba(0, 0, 0, 0.87)',
+                    secondary: 'rgba(0, 0, 0, 0.6)'
                   }
                 },
-                MuiTypography: {
-                  styleOverrides: {
-                    root: {
-                      color: 'rgba(0, 0, 0, 0.87) !important'
+                components: {
+                  MuiBox: {
+                    styleOverrides: {
+                      root: {
+                        backgroundColor: '#fffde7',
+                        color: 'rgba(0, 0, 0, 0.87) !important'
+                      }
                     }
-                  }
-                },
-                MuiTableCell: {
-                  styleOverrides: {
-                    root: {
-                      color: 'rgba(0, 0, 0, 0.87) !important',
-                      borderColor: 'rgba(0, 0, 0, 0.12) !important'
-                    },
-                    head: {
-                      fontWeight: 'bold !important',
-                      backgroundColor: '#f5f5f5 !important'
+                  },
+                  MuiTypography: {
+                    styleOverrides: {
+                      root: {
+                        color: 'rgba(0, 0, 0, 0.87) !important'
+                      }
                     }
-                  }
-                },
-                MuiTableRow: {
-                  styleOverrides: {
-                    root: {
-                      '&:nth-of-type(odd)': {
-                        backgroundColor: 'rgba(0, 0, 0, 0.02) !important'
+                  },
+                  MuiTableCell: {
+                    styleOverrides: {
+                      root: {
+                        color: 'rgba(0, 0, 0, 0.87) !important',
+                        borderColor: 'rgba(0, 0, 0, 0.12) !important'
+                      },
+                      head: {
+                        fontWeight: 'bold !important',
+                        backgroundColor: '#f5f5f5 !important'
+                      }
+                    }
+                  },
+                  MuiTableRow: {
+                    styleOverrides: {
+                      root: {
+                        '&:nth-of-type(odd)': {
+                          backgroundColor: 'rgba(0, 0, 0, 0.02) !important'
+                        }
                       }
                     }
                   }
                 }
-              }
-            })}>
+              })}>
               <Box sx={{ p: 2, border: '1px solid #e0e0e0', borderRadius: 1, backgroundColor: '#fffde7 !important' }}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 'bold', textAlign: 'center', mb: 1, color: 'rgba(0, 0, 0, 0.87) !important' }}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 'bold', textAlign: 'center', mb: 1, color: 'rgba(0, 0, 0, 0.87) !important', fontSize: '1.1rem' }}>
                   PLANILLA DE CIERRE DE CAJA
                 </Typography>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1, fontSize: '0.8rem', color: 'rgba(0, 0, 0, 0.87) !important' }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1, fontSize: '.8rem', color: 'rgba(0, 0, 0, 0.87) !important' }}>
                   <span><strong>FECHA:</strong> {new Date().toLocaleDateString()}</span>
                   <span><strong>TURNO:</strong> {sinergieData.turno || '__________'}</span>
                   <span><strong>HORA:</strong> {new Date().toLocaleTimeString()}</span>
                 </Box>
-                <Typography variant="body2" sx={{ mb: 2, fontSize: '0.8rem', color: 'rgba(0, 0, 0, 0.87) !important' }}>
+                <Typography variant="body2" sx={{ mb: 2, fontSize: '.8rem', color: 'rgba(0, 0, 0, 0.87) !important' }}>
                   <strong>CAJERO/A:</strong> {sinergieData.cajero || '__________'}
                 </Typography>
                 
-                <TableContainer>
-                  <Table size="small" sx={{ '& td, & th': { border: '1px solid #e0e0e0', p: 0.5, fontSize: '0.75rem', color: 'rgba(0, 0, 0, 0.87) !important' } }}>
-                    <TableHead>
-                      <TableRow>
-                        <TableCell sx={{ fontWeight: 'bold', backgroundColor: '#f5f5f5 !important', color: 'rgba(0, 0, 0, 0.87) !important' }}>CONCEPTO</TableCell>
-                        <TableCell align="right" sx={{ fontWeight: 'bold', backgroundColor: '#f5f5f5 !important', color: 'rgba(0, 0, 0, 0.87) !important' }}>IMPORTE</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {items.filter(item => item.amount).map((item, index) => (
-                        <TableRow key={index}>
-                          <TableCell sx={{ color: 'rgba(0, 0, 0, 0.87) !important' }}>{item.name}</TableCell>
-                          <TableCell align="right" sx={{ color: 'rgba(0, 0, 0, 0.87) !important' }}>{formatARS(item.amount)}</TableCell>
+                <Box sx={{ mx: 'auto', maxWidth: '700px' }}>
+                  <TableContainer>
+                    <Table size="small" sx={{ 
+                      maxWidth: '300px', 
+                      mx: 'auto',
+                      '& td, & th': { 
+                        border: '1px solid #e0e0e0', 
+                        p: 0.5, 
+                        fontSize: '1rem', 
+                        color: 'rgba(0, 0, 0, 0.87) !important' 
+                      } 
+                    }}>
+                      <colgroup>
+                        <col style={{ width: '70%' }} />
+                        <col style={{ width: '30%' }} />
+                      </colgroup>
+                      <TableHead>
+                        <TableRow>
+                          <TableCell sx={{ fontWeight: 'bold', backgroundColor: '#f5f5f5 !important', color: 'rgba(0, 0, 0, 0.87) !important' }}>CONCEPTO</TableCell>
+                          <TableCell align="right" sx={{ fontWeight: 'bold', backgroundColor: '#f5f5f5 !important', color: 'rgba(0, 0, 0, 0.87) !important' }}>IMPORTE</TableCell>
                         </TableRow>
-                      ))}
-                      <TableRow>
-                        <TableCell sx={{ fontWeight: 'bold', backgroundColor: '#f5f5f5 !important', color: 'rgba(0, 0, 0, 0.87) !important' }}>TOTAL</TableCell>
-                        <TableCell align="right" sx={{ fontWeight: 'bold', backgroundColor: '#f5f5f5 !important', color: 'rgba(0, 0, 0, 0.87) !important' }}>{formatARS(total)}</TableCell>
-                      </TableRow>
-                    </TableBody>
-                  </Table>
-                </TableContainer>
+                      </TableHead>
+                      <TableBody>
+                        {items.filter(item => item.amount).map((item, index) => (
+                          <TableRow key={index}>
+                            <TableCell sx={{ color: 'rgba(0, 0, 0, 0.87) !important' }}>{item.name}</TableCell>
+                            <TableCell align="right" sx={{ color: 'rgba(0, 0, 0, 0.87) !important' }}>{formatARS(item.amount)}</TableCell>
+                          </TableRow>
+                        ))}
+                        <TableRow>
+                          <TableCell sx={{ fontWeight: 'bold', backgroundColor: '#f5f5f5 !important', color: 'rgba(0, 0, 0, 0.87) !important' }}>TOTAL</TableCell>
+                          <TableCell align="right" sx={{ fontWeight: 'bold', backgroundColor: '#f5f5f5 !important', color: 'rgba(0, 0, 0, 0.87) !important' }}>{formatARS(total)}</TableCell>
+                        </TableRow>
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                </Box>
               </Box>
             </ThemeProvider>
+            </Box>
           </Paper>
         </Grid>
       )}
