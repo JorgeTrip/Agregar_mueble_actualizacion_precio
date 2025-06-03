@@ -34,7 +34,8 @@ import {
   Save as SaveIcon,
   Add as AddIcon,
   Delete as DeleteIcon,
-  Calculate as CalculateIcon
+  Calculate as CalculateIcon,
+  Warning as WarningIcon
 } from '@mui/icons-material';
 import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
@@ -63,7 +64,7 @@ const predefinedItems = [
   'Ajuste',
   'Notas de crédito',
   'Facturas manuales',
-  'Extra Cash Posnet',
+  'Extra Cash Posnet (Visa Electron + MasterCard)',
   'Extra Cash Mercado Pago',
   'Tarjetas',
   'Mercado Pago',
@@ -755,9 +756,9 @@ function ClosureChecklist() {
       // Para los items individuales, usar el formato ya existente o formatear
       const amount = parseFloat(item.amount);
       const isNegative = amount < 0;
-      const formattedValue = item.formattedAmount || formatARSWithoutSymbol(Math.abs(amount) || 0);
+      const formattedValue = item.formattedAmount || formatARS(Math.abs(amount) || 0);
       return `${item.name.padEnd(25)}: ${isNegative ? '-$' : '$'}${formattedValue}`;
-    }).join('\n') + `\n\nTOTAL GENERAL: ${total < 0 ? '-$' : '$'}${formatARSWithoutSymbol(Math.abs(total))}`;
+    }).join('\n') + `\n\nTOTAL GENERAL: ${total < 0 ? '-$' : '$'}${formatARS(Math.abs(total))}`;
     
     const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
     saveAs(blob, `${formattedDate} Cierre de caja.txt`);
@@ -1472,14 +1473,28 @@ function ClosureChecklist() {
                   {items.filter(item => [
                     'Deposito 1', 'Deposito 2', 'Deposito 3', 'Deposito 4', 'Depo Final', 
                     'Retiro', 'Ajuste', 'Notas de crédito', 'Facturas manuales', 
-                    'Extra Cash Posnet', 'Extra Cash Mercado Pago'
+                    'Extra Cash Posnet (Visa Electron + MasterCard)', 'Extra Cash Mercado Pago'
                   ].includes(item.name)).map((item, index) => {
                     // Recalcular el índice real en el array original
                     const realIndex = items.findIndex(i => i.name === item.name);
                     return (
                       <Fragment key={realIndex}>
                         <Grid item xs={7} sm={8} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <Typography variant="body1">{item.name}</Typography>
+                          <Typography variant="body1">
+                            {item.name}
+                            {item.name === 'Rappi' && (
+                              <Tooltip title="Copiar antes de hacer el cierre X de Sinergie, ya que una vez hecho, el importe Rappi ya no se ve por separado, y pasa a sumarse con las Tarjetas.">
+                                <WarningIcon 
+                                  color="warning" 
+                                  sx={{ 
+                                    fontSize: '1rem', 
+                                    ml: 1,
+                                    verticalAlign: 'middle'
+                                  }} 
+                                />
+                              </Tooltip>
+                            )}
+                          </Typography>
                           
                           {/* Switch para el campo Ajuste */}
                           {item.name === 'Ajuste' && (
@@ -1502,7 +1517,7 @@ function ClosureChecklist() {
                           )}
                         </Grid>
                         <Grid item xs={5} sm={4}>
-                          {['Notas de crédito', 'Facturas manuales', 'Extra Cash Posnet', 'Extra Cash Mercado Pago'].includes(item.name) ? (
+                          {['Notas de crédito', 'Facturas manuales', 'Extra Cash Posnet (Visa Electron + MasterCard)', 'Extra Cash Mercado Pago'].includes(item.name) ? (
                             <Box>
                               <TextField
                                 fullWidth
@@ -1671,10 +1686,24 @@ function ClosureChecklist() {
                     return (
                       <Fragment key={realIndex}>
                         <Grid item xs={7} sm={8} sx={{ display: 'flex', alignItems: 'center' }}>
-                          <Typography variant="body1">{item.name}</Typography>
+                          <Typography variant="body1">
+                            {item.name}
+                            {item.name === 'Rappi' && (
+                              <Tooltip title="Copiar antes de hacer el cierre X de Sinergie, ya que una vez hecho, el importe Rappi ya no se ve por separado, y pasa a sumarse con las Tarjetas.">
+                                <WarningIcon 
+                                  color="warning" 
+                                  sx={{ 
+                                    fontSize: '1rem', 
+                                    ml: 1,
+                                    verticalAlign: 'middle'
+                                  }} 
+                                />
+                              </Tooltip>
+                            )}
+                          </Typography>
                         </Grid>
                         <Grid item xs={5} sm={4}>
-                          {['Notas de crédito', 'Facturas manuales', 'Extra Cash Posnet', 'Extra Cash Mercado Pago'].includes(item.name) ? (
+                          {['Notas de crédito', 'Facturas manuales', 'Extra Cash Posnet (Visa Electron + MasterCard)', 'Extra Cash Mercado Pago'].includes(item.name) ? (
                             <Box>
                               <TextField
                                 fullWidth
