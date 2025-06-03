@@ -2093,16 +2093,30 @@ function ClosureChecklist() {
                       </TableHead>
                       <TableBody>
                         {/* Depósitos */}
-                        {['Deposito 1', 'Deposito 2', 'Deposito 3', 'Deposito 4', 'Depo Final'].map((depositName, idx) => {
-                          const item = items.find(i => i.name === depositName);
-                          return (
-                            <TableRow key={`deposit-${idx}`}>
-                              <TableCell>Depósito</TableCell>
-                              <TableCell align="right">{item && item.amount ? formatARS(item.amount) : ''}</TableCell>
-                              <TableCell></TableCell>
-                            </TableRow>
-                          );
-                        })}
+                        {(() => {
+                          const depositNames = ['Deposito 1', 'Deposito 2', 'Deposito 3', 'Deposito 4', 'Depo Final'];
+                          const filledDepositItems = depositNames
+                            .map(name => items.find(i => i.name === name))
+                            .filter(item => item && item.amount && parseFormattedValue(item.amount) !== 0);
+
+                          if (filledDepositItems.length > 0) {
+                            return filledDepositItems.map((item, idx) => (
+                              <TableRow key={`deposit-filled-${idx}`}>
+                                <TableCell>Depósito</TableCell>
+                                <TableCell align="right">{formatARS(item.amount)}</TableCell>
+                                <TableCell></TableCell>
+                              </TableRow>
+                            ));
+                          } else {
+                            return (
+                              <TableRow key="deposit-empty">
+                                <TableCell>Depósito</TableCell>
+                                <TableCell align="right">{''}</TableCell>
+                                <TableCell></TableCell>
+                              </TableRow>
+                            );
+                          }
+                        })()}
                         
                         {/* Extra Cash */}
                         {['Extra Cash Mercado Pago', 'Extra Cash Posnet (Visa Electron + MasterCard)'].map((name, idx) => {
