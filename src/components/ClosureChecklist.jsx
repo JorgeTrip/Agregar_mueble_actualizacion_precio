@@ -671,6 +671,29 @@ function ClosureChecklist() {
     handleFormattedChange(value, index, items[index].formattedAmount);
   };
 
+  const handleKeyDown = (event, currentRealIndex, allItems, inputRefs) => {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      let nextFocusableRealIndex = -1;
+      // Start searching from the item *after* the current one in the global 'allItems' list
+      for (let i = currentRealIndex + 1; i < allItems.length; i++) {
+          // Check if the item at this 'realIndex' (i) has an input ref, 
+          // meaning it's rendered and should be focusable.
+          if (inputRefs.current[i]) {
+              nextFocusableRealIndex = i;
+              break;
+          }
+      }
+
+      if (nextFocusableRealIndex !== -1) {
+        const nextInput = inputRefs.current[nextFocusableRealIndex];
+        if (nextInput) {
+          nextInput.focus();
+        }
+      }
+    }
+  };
+
   /**
    * @description Calcula el total de todos los montos ingresados
    * @type {number}
@@ -1609,16 +1632,7 @@ function ClosureChecklist() {
                                   if (value.startsWith('-$')) value = value.substring(2);
                                   handleFormattedChange({ target: { value } }, realIndex);
                                 }}
-                                onKeyDown={(e) => {
-                                  if (e.key === 'Enter') {
-                                    e.preventDefault();
-                                    const nextIndex = index + 1;
-                                    if (nextIndex < items.length) {
-                                      const nextInput = inputRefs.current[nextIndex];
-                                      if (nextInput) nextInput.focus();
-                                    }
-                                  }
-                                }}
+                                onKeyDown={(e) => handleKeyDown(e, realIndex, items, inputRefs)}
                                 inputRef={el => inputRefs.current[realIndex] = el}
                                 inputProps={{
                                   inputMode: 'decimal',
@@ -1694,18 +1708,7 @@ function ClosureChecklist() {
                                 if (value.startsWith('-$')) value = value.substring(2);
                                 handleFormattedChange({ target: { value } }, realIndex);
                               }}
-                              onKeyDown={(e) => {
-                                if (e.key === 'Enter') {
-                                  e.preventDefault();
-                                  const nextIndex = index + 1;
-                                  if (nextIndex < items.length) {
-                                    const nextInput = inputRefs.current[nextIndex];
-                                    if (nextInput) {
-                                      nextInput.focus();
-                                    }
-                                  }
-                                }
-                              }}
+                              onKeyDown={(e) => handleKeyDown(e, realIndex, items, inputRefs)}
                               inputRef={el => inputRefs.current[realIndex] = el}
                               sx={{
                                 '& .MuiInputBase-root': {
@@ -1808,18 +1811,7 @@ function ClosureChecklist() {
                                   if (value.startsWith('-$')) value = value.substring(2);
                                   handleFormattedChange({ target: { value } }, realIndex);
                                 }}
-                                onKeyDown={(e) => {
-                                  if (e.key === 'Enter') {
-                                    e.preventDefault();
-                                    const nextIndex = index + 1;
-                                    if (nextIndex < items.length) {
-                                      const nextInput = inputRefs.current[nextIndex];
-                                      if (nextInput) {
-                                        nextInput.focus();
-                                      }
-                                    }
-                                  }
-                                }}
+                                onKeyDown={(e) => handleKeyDown(e, realIndex, items, inputRefs)}
                                 inputRef={el => inputRefs.current[realIndex] = el}
                                 sx={{
                                   height: '40px', // Ensure consistent height
@@ -1881,18 +1873,7 @@ function ClosureChecklist() {
                                 if (value.startsWith('-$')) value = value.substring(2);
                                 handleFormattedChange({ target: { value } }, realIndex);
                               }}
-                              onKeyDown={(e) => {
-                                if (e.key === 'Enter') {
-                                  e.preventDefault();
-                                  const nextIndex = index + 1;
-                                  if (nextIndex < items.length) {
-                                    const nextInput = inputRefs.current[nextIndex];
-                                    if (nextInput) {
-                                      nextInput.focus();
-                                    }
-                                  }
-                                }
-                              }}
+                              onKeyDown={(e) => handleKeyDown(e, realIndex, items, inputRefs)}
                               inputRef={el => inputRefs.current[realIndex] = el}
                               sx={{
                                 '& .MuiInputBase-root': {
