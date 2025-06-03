@@ -2107,13 +2107,12 @@ function ClosureChecklist() {
                           </TableCell>
                           <TableCell></TableCell>
                         </TableRow>
-                        
-                        {/* Ajuste negativo (como Gasto adicional si es necesario) */}
+                        {/* Ajuste */}
                         <TableRow>
-                          <TableCell>Ajuste (egreso)</TableCell>
+                          <TableCell>Ajuste</TableCell>
                           <TableCell align="right">
-                            {items.find(i => i.name === 'Ajuste' && parseFloat(i.amount) < 0)?.amount 
-                              ? formatARS(Math.abs(parseFloat(items.find(i => i.name === 'Ajuste')?.amount || 0))) 
+                            {items.find(i => i.name === 'Ajuste')?.amount
+                              ? formatARS(parseFloat(items.find(i => i.name === 'Ajuste')?.amount || "0"))
                               : ''}
                           </TableCell>
                           <TableCell></TableCell>
