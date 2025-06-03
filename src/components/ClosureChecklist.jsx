@@ -2175,7 +2175,7 @@ function ClosureChecklist() {
                           <TableCell>Pago QR M.P.</TableCell>
                           <TableCell align="right">
                             {items.find(i => i.name === 'Mercado Pago')?.amount 
-                              ? formatARS(items.find(i => i.name === 'Mercado Pago')?.amount) 
+                              ? formatARS(parseFloat(items.find(i => i.name === 'Mercado Pago')?.amount || "0")) 
                               : ''}
                           </TableCell>
                           <TableCell></TableCell>
