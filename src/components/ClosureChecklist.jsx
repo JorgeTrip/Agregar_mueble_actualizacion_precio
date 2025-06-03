@@ -701,16 +701,24 @@ function ClosureChecklist() {
    * @returns {number} Total de pagos electrónicos
    */
   const calcularTotalElectronico = () => {
-    return items
-      .filter(item => [
-        'Mercado Pago', 'Pedidos Ya', 'Tarjetas'
-      ].includes(item.name))
-      .reduce((acc, item) => {
-        if (item.amount) {
-          return acc + parseFloat(item.amount);
-        }
-        return acc;
-      }, 0);
+    const mercadoPagoItem = items.find(i => i.name === 'Mercado Pago');
+    const extraCashMPItem = items.find(i => i.name === 'Extra Cash Mercado Pago');
+    const rappiItem = items.find(i => i.name === 'Rappi');
+    const pedidosYaItem = items.find(i => i.name === 'Pedidos Ya');
+    const tarjetasItem = items.find(i => i.name === 'Tarjetas');
+    const extraCashPosnetItem = items.find(i => i.name === 'Extra Cash Posnet (Visa Electron + MasterCard)');
+
+    const mercadoPagoAmount = parseFloat(mercadoPagoItem?.amount || "0");
+    const extraCashMPAmount = parseFloat(extraCashMPItem?.amount || "0");
+    const rappiAmount = parseFloat(rappiItem?.amount || "0");
+    const pedidosYaAmount = parseFloat(pedidosYaItem?.amount || "0");
+    const tarjetasAmount = parseFloat(tarjetasItem?.amount || "0");
+    const extraCashPosnetAmount = parseFloat(extraCashPosnetItem?.amount || "0");
+
+    const adjustedMercadoPagoAmount = mercadoPagoAmount - extraCashMPAmount;
+    const adjustedTarjetasAmount = tarjetasAmount - extraCashPosnetAmount;
+
+    return adjustedMercadoPagoAmount + rappiAmount + pedidosYaAmount + adjustedTarjetasAmount;
   };
   
   /**
@@ -718,16 +726,19 @@ function ClosureChecklist() {
    * @returns {number} Total de ventas online
    */
   const calcularTotalVentasOnline = () => {
-    return items
-      .filter(item => [
-        'Mercado Pago', 'Pedidos Ya', 'Rappi'
-      ].includes(item.name))
-      .reduce((acc, item) => {
-        if (item.amount) {
-          return acc + parseFloat(item.amount);
-        }
-        return acc;
-      }, 0);
+    const mercadoPagoItem = items.find(i => i.name === 'Mercado Pago');
+    const extraCashMPItem = items.find(i => i.name === 'Extra Cash Mercado Pago');
+    const pedidosYaItem = items.find(i => i.name === 'Pedidos Ya');
+    const rappiItem = items.find(i => i.name === 'Rappi');
+
+    const mercadoPagoAmount = parseFloat(mercadoPagoItem?.amount || "0");
+    const extraCashMPAmount = parseFloat(extraCashMPItem?.amount || "0");
+    const pedidosYaAmount = parseFloat(pedidosYaItem?.amount || "0");
+    const rappiAmount = parseFloat(rappiItem?.amount || "0");
+
+    const adjustedMercadoPagoAmount = mercadoPagoAmount - extraCashMPAmount;
+
+    return adjustedMercadoPagoAmount + pedidosYaAmount + rappiAmount;
   };
 
   /**
@@ -2174,9 +2185,16 @@ function ClosureChecklist() {
                         <TableRow>
                           <TableCell>Pago QR M.P.</TableCell>
                           <TableCell align="right">
-                            {items.find(i => i.name === 'Mercado Pago')?.amount 
-                              ? formatARS(parseFloat(items.find(i => i.name === 'Mercado Pago')?.amount || "0")) 
-                              : ''}
+                            {(() => {
+                              const mercadoPagoItem = items.find(i => i.name === 'Mercado Pago');
+                              const extraCashMPItem = items.find(i => i.name === 'Extra Cash Mercado Pago');
+
+                              const mercadoPagoAmount = parseFloat(mercadoPagoItem?.amount || "0");
+                              const extraCashMPAmount = parseFloat(extraCashMPItem?.amount || "0");
+
+                              const resultado = mercadoPagoAmount - extraCashMPAmount;
+                              return formatARS(resultado);
+                            })()}
                           </TableCell>
                           <TableCell></TableCell>
                         </TableRow>
@@ -2205,9 +2223,16 @@ function ClosureChecklist() {
                         <TableRow>
                           <TableCell>TARJETA</TableCell>
                           <TableCell align="right">
-                            {items.find(i => i.name === 'Tarjetas')?.amount 
-                              ? formatARS(items.find(i => i.name === 'Tarjetas')?.amount) 
-                              : ''}
+                            {(() => {
+                              const tarjetasItem = items.find(i => i.name === 'Tarjetas');
+                              const extraCashPosnetItem = items.find(i => i.name === 'Extra Cash Posnet (Visa Electron + MasterCard)');
+
+                              const tarjetasAmount = parseFloat(tarjetasItem?.amount || "0");
+                              const extraCashPosnetAmount = parseFloat(extraCashPosnetItem?.amount || "0");
+
+                              const resultado = tarjetasAmount - extraCashPosnetAmount;
+                              return formatARS(resultado);
+                            })()}
                           </TableCell>
                           <TableCell></TableCell>
                         </TableRow>
