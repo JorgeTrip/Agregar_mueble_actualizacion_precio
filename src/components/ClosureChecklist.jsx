@@ -106,7 +106,8 @@ const MultipleAmountDialog = ({ open, onClose, title, amounts, setAmounts, onSav
   // Estado local para gestionar los campos de entrada
   const [newAmount, setNewAmount] = useState('');
   const [formattedNewAmount, setFormattedNewAmount] = useState('');
-  
+  const inputRef = useRef(null);
+
   // Calcular el total de los importes
   const total = amounts.reduce((sum, item) => sum + (parseFloat(item.amount) || 0), 0);
   const formattedTotal = formatARS(Math.abs(total)).replace('$', '');
@@ -674,6 +675,59 @@ function ClosureChecklist() {
    * @type {number}
    */
   const total = items.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
+
+  /**
+   * @description Calcula el total de efectivo y depósitos
+   * @returns {number} Total de efectivo
+   */
+  const calcularTotalEfectivo = () => {
+    return items
+      .filter(item => [
+        'Deposito 1', 'Deposito 2', 'Deposito 3', 'Deposito 4', 'Depo Final',
+        'Extra Cash Mercado Pago', 'Extra Cash Posnet (Visa Electron + MasterCard)', 
+        'Retiro', 'Ajuste'
+      ].includes(item.name))
+      .reduce((acc, item) => {
+        if (item.amount) {
+          return acc + parseFloat(item.amount);
+        }
+        return acc;
+      }, 0);
+  };
+  
+  /**
+   * @description Calcula el total de pagos electrónicos
+   * @returns {number} Total de pagos electrónicos
+   */
+  const calcularTotalElectronico = () => {
+    return items
+      .filter(item => [
+        'Mercado Pago', 'Pedidos Ya', 'Tarjetas'
+      ].includes(item.name))
+      .reduce((acc, item) => {
+        if (item.amount) {
+          return acc + parseFloat(item.amount);
+        }
+        return acc;
+      }, 0);
+  };
+  
+  /**
+   * @description Calcula el total de ventas online
+   * @returns {number} Total de ventas online
+   */
+  const calcularTotalVentasOnline = () => {
+    return items
+      .filter(item => [
+        'Mercado Pago', 'Pedidos Ya', 'Rappi'
+      ].includes(item.name))
+      .reduce((acc, item) => {
+        if (item.amount) {
+          return acc + parseFloat(item.amount);
+        }
+        return acc;
+      }, 0);
+  };
 
   /**
    * @description Limpia todos los campos y reinicia el estado del componente
@@ -1972,38 +2026,183 @@ function ClosureChecklist() {
                   <strong>CAJERO/A:</strong> {sinergieData.cajero || '__________'}
                 </Typography>
                 
-                <Box sx={{ mx: 'auto', maxWidth: '700px' }}>
+                {/* Sección de Efectivo - Arqueo de Caja */}
+                <Box sx={{ mb: 3, border: '1px solid #9e9e9e', borderRadius: '12px', overflow: 'hidden' }}>
+                  <Box sx={{ 
+                    p: 1, 
+                    backgroundColor: '#e0e0e0', 
+                    borderBottom: '1px solid #9e9e9e',
+                    textAlign: 'center'
+                  }}>
+                    <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
+                      ARQUEO DE CAJA - {sinergieData.turno} - Depósitos
+                    </Typography>
+                  </Box>
+                  
                   <TableContainer>
                     <Table size="small" sx={{ 
-                      maxWidth: '300px', 
-                      mx: 'auto',
                       '& td, & th': { 
-                        border: '1px solid #e0e0e0', 
+                        border: '1px solid #9e9e9e', 
                         p: 0.5, 
-                        fontSize: '1rem', 
-                        color: 'rgba(0, 0, 0, 0.87) !important' 
+                        fontSize: '0.9rem', 
+                        color: 'rgba(0, 0, 0, 0.87) !important'
                       } 
                     }}>
-                      <colgroup>
-                        <col style={{ width: '70%' }} />
-                        <col style={{ width: '30%' }} />
-                      </colgroup>
                       <TableHead>
                         <TableRow>
-                          <TableCell sx={{ fontWeight: 'bold', backgroundColor: '#f5f5f5 !important', color: 'rgba(0, 0, 0, 0.87) !important' }}>CONCEPTO</TableCell>
-                          <TableCell align="right" sx={{ fontWeight: 'bold', backgroundColor: '#f5f5f5 !important', color: 'rgba(0, 0, 0, 0.87) !important' }}>IMPORTE</TableCell>
+                          <TableCell width="40%" sx={{ fontWeight: 'bold', backgroundColor: '#f5f5f5 !important' }}>Descripción</TableCell>
+                          <TableCell width="30%" align="center" sx={{ fontWeight: 'bold', backgroundColor: '#f5f5f5 !important' }}>Importe</TableCell>
+                          <TableCell width="30%" align="center" sx={{ fontWeight: 'bold', backgroundColor: '#f5f5f5 !important' }}>Responsable</TableCell>
                         </TableRow>
                       </TableHead>
                       <TableBody>
-                        {items.filter(item => item.amount).map((item, index) => (
-                          <TableRow key={index}>
-                            <TableCell sx={{ color: 'rgba(0, 0, 0, 0.87) !important' }}>{item.name}</TableCell>
-                            <TableCell align="right" sx={{ color: 'rgba(0, 0, 0, 0.87) !important' }}>{formatARS(item.amount)}</TableCell>
-                          </TableRow>
-                        ))}
+                        {/* Depósitos */}
+                        {['Deposito 1', 'Deposito 2', 'Deposito 3', 'Deposito 4', 'Depo Final'].map((depositName, idx) => {
+                          const item = items.find(i => i.name === depositName);
+                          return (
+                            <TableRow key={`deposit-${idx}`}>
+                              <TableCell>Depósito</TableCell>
+                              <TableCell align="right">{item && item.amount ? formatARS(item.amount) : ''}</TableCell>
+                              <TableCell></TableCell>
+                            </TableRow>
+                          );
+                        })}
+                        
+                        {/* Extra Cash */}
+                        {['Extra Cash Mercado Pago', 'Extra Cash Posnet (Visa Electron + MasterCard)'].map((name, idx) => {
+                          const item = items.find(i => i.name === name);
+                          return (
+                            <TableRow key={`extra-${idx}`}>
+                              <TableCell>{name === 'Extra Cash Mercado Pago' ? 'Extra Cash M.P.' : 'Extra Cash Posnet'}</TableCell>
+                              <TableCell align="right">{item && item.amount ? formatARS(item.amount) : ''}</TableCell>
+                              <TableCell></TableCell>
+                            </TableRow>
+                          );
+                        })}
+                        
+                        {/* Ajuste (como Gasto) */}
                         <TableRow>
-                          <TableCell sx={{ fontWeight: 'bold', backgroundColor: '#f5f5f5 !important', color: 'rgba(0, 0, 0, 0.87) !important' }}>TOTAL</TableCell>
-                          <TableCell align="right" sx={{ fontWeight: 'bold', backgroundColor: '#f5f5f5 !important', color: 'rgba(0, 0, 0, 0.87) !important' }}>{formatARS(total)}</TableCell>
+                          <TableCell>Gasto</TableCell>
+                          <TableCell align="right">
+                            {items.find(i => i.name === 'Ajuste' && parseFloat(i.amount) < 0)?.amount 
+                              ? formatARS(Math.abs(parseFloat(items.find(i => i.name === 'Ajuste')?.amount || 0))) 
+                              : ''}
+                          </TableCell>
+                          <TableCell></TableCell>
+                        </TableRow>
+                        
+                        {/* Retiro */}
+                        <TableRow>
+                          <TableCell>Retiro de monedas</TableCell>
+                          <TableCell align="right">
+                            {items.find(i => i.name === 'Retiro')?.amount 
+                              ? formatARS(items.find(i => i.name === 'Retiro')?.amount) 
+                              : ''}
+                          </TableCell>
+                          <TableCell></TableCell>
+                        </TableRow>
+                        
+                        {/* TOTAL EFECTIVO */}
+                        <TableRow sx={{ backgroundColor: '#e0e0e0' }}>
+                          <TableCell sx={{ fontWeight: 'bold' }}>TOTAL EFECTIVO</TableCell>
+                          <TableCell align="right" sx={{ fontWeight: 'bold' }}>
+                            {formatARS(calcularTotalEfectivo())}
+                          </TableCell>
+                          <TableCell></TableCell>
+                        </TableRow>
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                </Box>
+                
+                {/* Sección de Pagos Electrónicos */}
+                <Box sx={{ mb: 3, border: '1px solid #9e9e9e', borderRadius: '12px', overflow: 'hidden' }}>
+                  <TableContainer>
+                    <Table size="small" sx={{ 
+                      '& td, & th': { 
+                        border: '1px solid #9e9e9e', 
+                        p: 0.5, 
+                        fontSize: '0.9rem', 
+                        color: 'rgba(0, 0, 0, 0.87) !important'
+                      } 
+                    }}>
+                      <TableHead>
+                        <TableRow>
+                          <TableCell width="40%" sx={{ fontWeight: 'bold', backgroundColor: '#f5f5f5 !important' }}>Descripción</TableCell>
+                          <TableCell width="30%" align="center" sx={{ fontWeight: 'bold', backgroundColor: '#f5f5f5 !important' }}>Importe</TableCell>
+                          <TableCell width="30%" align="center" sx={{ fontWeight: 'bold', backgroundColor: '#f5f5f5 !important' }}>Responsable</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {/* Pagos QR */}
+                        <TableRow>
+                          <TableCell>Pago QR M.P.</TableCell>
+                          <TableCell align="right">
+                            {items.find(i => i.name === 'Mercado Pago')?.amount 
+                              ? formatARS(items.find(i => i.name === 'Mercado Pago')?.amount) 
+                              : ''}
+                          </TableCell>
+                          <TableCell></TableCell>
+                        </TableRow>
+                        <TableRow>
+                          <TableCell>Pago QR MODO</TableCell>
+                          <TableCell align="right"></TableCell>
+                          <TableCell></TableCell>
+                        </TableRow>
+                        
+                        {/* Delivery */}
+                        <TableRow>
+                          <TableCell>PedidosYa</TableCell>
+                          <TableCell align="right">
+                            {items.find(i => i.name === 'Pedidos Ya')?.amount 
+                              ? formatARS(items.find(i => i.name === 'Pedidos Ya')?.amount) 
+                              : ''}
+                          </TableCell>
+                          <TableCell></TableCell>
+                        </TableRow>
+                        
+                        {/* Tarjetas */}
+                        <TableRow>
+                          <TableCell>TARJETA</TableCell>
+                          <TableCell align="right">
+                            {items.find(i => i.name === 'Tarjetas')?.amount 
+                              ? formatARS(items.find(i => i.name === 'Tarjetas')?.amount) 
+                              : ''}
+                          </TableCell>
+                          <TableCell></TableCell>
+                        </TableRow>
+                        
+                        {/* TOTAL ELECTRÓNICO */}
+                        <TableRow sx={{ backgroundColor: '#e0e0e0' }}>
+                          <TableCell sx={{ fontWeight: 'bold' }}>TOTAL ELECTRÓNICO</TableCell>
+                          <TableCell align="right" sx={{ fontWeight: 'bold' }}>
+                            {formatARS(calcularTotalElectronico())}
+                          </TableCell>
+                          <TableCell></TableCell>
+                        </TableRow>
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                </Box>
+                
+                {/* Sección de TOTAL VENTAS ONLINE */}
+                <Box sx={{ mb: 2, border: '1px solid #9e9e9e', borderRadius: '12px', overflow: 'hidden' }}>
+                  <TableContainer>
+                    <Table size="small" sx={{ 
+                      '& td, & th': { 
+                        border: '1px solid #9e9e9e', 
+                        p: 0.5, 
+                        fontSize: '0.9rem', 
+                        color: 'rgba(0, 0, 0, 0.87) !important'
+                      } 
+                    }}>
+                      <TableBody>
+                        <TableRow sx={{ backgroundColor: '#e0e0e0' }}>
+                          <TableCell width="40%" sx={{ fontWeight: 'bold' }}>TOTAL VENTAS ONLINE</TableCell>
+                          <TableCell width="30%" align="right" sx={{ fontWeight: 'bold' }}>
+                            {formatARS(calcularTotalVentasOnline())}
+                          </TableCell>
+                          <TableCell width="30%"></TableCell>
                         </TableRow>
                       </TableBody>
                     </Table>
