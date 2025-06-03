@@ -67,6 +67,7 @@ const predefinedItems = [
   'Facturas manuales',
   'Extra Cash Posnet (Visa Electron + MasterCard)',
   'Extra Cash Mercado Pago',
+  'Ventas Online',
   'Tarjetas',
   'Mercado Pago',
   'Pedidos Ya',
@@ -761,7 +762,10 @@ function ClosureChecklist() {
 
     const adjustedMercadoPagoAmount = mercadoPagoAmount - extraCashMPAmount;
 
-    return adjustedMercadoPagoAmount + pedidosYaAmount + rappiAmount;
+    const ventasOnlineItem = items.find(i => i.name === 'Ventas Online');
+  const ventasOnlineAmount = parseFloat(ventasOnlineItem?.amount || "0");
+
+  return adjustedMercadoPagoAmount + pedidosYaAmount + rappiAmount + ventasOnlineAmount;
   };
 
   /**
@@ -1562,7 +1566,7 @@ function ClosureChecklist() {
                   {items.filter(item => [
                     'Deposito 1', 'Deposito 2', 'Deposito 3', 'Deposito 4', 'Depo Final', 
                     'Retiro', 'Ajuste', 'Gastos', 'Notas de crédito', 'Facturas manuales', 
-                    'Extra Cash Posnet (Visa Electron + MasterCard)', 'Extra Cash Mercado Pago'
+                    'Extra Cash Posnet (Visa Electron + MasterCard)', 'Extra Cash Mercado Pago', 'Ventas Online'
                   ].includes(item.name)).map((item, index) => {
                     // Recalcular el índice real en el array original
                     const realIndex = items.findIndex(i => i.name === item.name);
@@ -1618,7 +1622,7 @@ function ClosureChecklist() {
                           )}
                         </Grid>
                         <Grid item xs={5} sm={4}>
-                          {['Notas de crédito', 'Facturas manuales', 'Extra Cash Posnet (Visa Electron + MasterCard)', 'Extra Cash Mercado Pago', 'Gastos'].includes(item.name) ? (
+                          {['Notas de crédito', 'Facturas manuales', 'Extra Cash Posnet (Visa Electron + MasterCard)', 'Extra Cash Mercado Pago', 'Gastos', 'Ventas Online'].includes(item.name) ? (
                             <Box>
                               <TextField
                                 fullWidth
@@ -1796,7 +1800,7 @@ function ClosureChecklist() {
                           </Typography>
                         </Grid>
                         <Grid item xs={5} sm={4}>
-                          {['Notas de crédito', 'Facturas manuales', 'Extra Cash Posnet (Visa Electron + MasterCard)', 'Extra Cash Mercado Pago', 'Gastos'].includes(item.name) ? (
+                          {['Notas de crédito', 'Facturas manuales', 'Extra Cash Posnet (Visa Electron + MasterCard)', 'Extra Cash Mercado Pago', 'Gastos', 'Ventas Online'].includes(item.name) ? (
                             <Box>
                               <TextField
                                 fullWidth
@@ -2245,7 +2249,7 @@ function ClosureChecklist() {
                         <TableRow sx={{ backgroundColor: '#e0e0e0' }}>
                           <TableCell width="40%" sx={{ fontWeight: 'bold' }}>TOTAL VENTAS ONLINE</TableCell>
                           <TableCell width="30%" align="right" sx={{ fontWeight: 'bold' }}>
-                            {formatARS(calcularTotalVentasOnline())}
+                            {items.find(i => i.name === 'Ventas Online')?.amount ? formatARS(items.find(i => i.name === 'Ventas Online')?.amount) : ''}
                           </TableCell>
                           <TableCell width="30%"></TableCell>
                         </TableRow>
