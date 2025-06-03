@@ -27,8 +27,21 @@ import {
   Tooltip
 } from '@mui/material';
 import { saveAs } from 'file-saver';
-import { useRef, useState, Fragment } from 'react';
-import { Upload as UploadIcon, Description as DescriptionIcon, Save as SaveIcon } from '@mui/icons-material';
+import React, { useRef, useState, Fragment } from 'react';
+import { 
+  Upload as UploadIcon, 
+  Description as DescriptionIcon, 
+  Save as SaveIcon,
+  Add as AddIcon,
+  Delete as DeleteIcon,
+  Calculate as CalculateIcon
+} from '@mui/icons-material';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogActions from '@mui/material/DialogActions';
+import IconButton from '@mui/material/IconButton';
+import Fade from '@mui/material/Fade';
 
 /**
  * @fileoverview Componente para gestionar el checklist de cierre de caja de una farmacia
@@ -84,7 +97,226 @@ const turnosMap = {
 };
 
 /**
- * @description Componente principal que gestiona el checklist de cierre
+ * Componente para sumar múltiples importes
+ * @param {Object} props - Propiedades del componente
+ * @returns {JSX.Element} Componente de diálogo
+ */
+const MultipleAmountDialog = ({ open, onClose, title, amounts, setAmounts, onSave, anchorEl }) => {
+  // Estado local para gestionar los campos de entrada
+  const [newAmount, setNewAmount] = useState('');
+  const [formattedNewAmount, setFormattedNewAmount] = useState('');
+  
+  // Calcular el total de los importes
+  const total = amounts.reduce((sum, item) => sum + (parseFloat(item.amount) || 0), 0);
+  const formattedTotal = formatARS(Math.abs(total)).replace('$', '');
+  
+  // Función para agregar un nuevo importe a la lista
+  const handleAddAmount = () => {
+    if (newAmount) {
+      // Agregar el nuevo importe a la lista
+      setAmounts([...amounts, { 
+        amount: newAmount, 
+        formattedAmount: formattedNewAmount 
+      }]);
+      
+      // Limpiar el campo después de agregar
+      setNewAmount('');
+      setFormattedNewAmount('');
+    }
+  };
+  
+  // Función para eliminar un importe de la lista
+  const handleRemoveAmount = (index) => {
+    const newAmounts = [...amounts];
+    newAmounts.splice(index, 1);
+    setAmounts(newAmounts);
+  };
+  
+  // Manejar cambios en el campo de nuevo importe
+  const handleNewAmountChange = (e) => {
+    const value = e.target.value;
+    
+    if (value === '') {
+      setNewAmount('');
+      setFormattedNewAmount('');
+      return;
+    }
+    
+    const regex = /^[0-9,.]*$/;
+    if (!regex.test(value)) return;
+    
+    const justAddedDot = value.endsWith('.') && !formattedNewAmount?.endsWith(',');
+    
+    let processedValue;
+    if (justAddedDot) {
+      processedValue = value.slice(0, -1) + ',';
+    } else {
+      processedValue = value;
+    }
+    
+    const cleanValue = processedValue.replace(/[^0-9,.]/g, '');
+    
+    const hasDecimal = cleanValue.includes(',');
+    
+    let [integerPart, decimalPart] = cleanValue.split(',');
+    integerPart = integerPart.replace(/\./g, '');
+    
+    // Formatear la parte entera con puntos para miles
+    let formattedInteger = '';
+    for (let i = 0; i < integerPart.length; i++) {
+      if (i > 0 && (integerPart.length - i) % 3 === 0) {
+        formattedInteger += '.';
+      }
+      formattedInteger += integerPart[i];
+    }
+    
+    // Crear el valor formateado final
+    let formattedValue;
+    if (hasDecimal) {
+      formattedValue = formattedInteger + ',' + (decimalPart || '');
+    } else {
+      formattedValue = formattedInteger;
+    }
+    
+    // Convertir a valor numérico
+    let numericValue = parseFloat(integerPart + '.' + (decimalPart || '0'));
+    
+    setNewAmount(numericValue.toString());
+    setFormattedNewAmount(formattedValue);
+  };
+  
+  // Guardar los cambios y cerrar el diálogo
+  const handleSave = () => {
+    onSave(total, formattedTotal);
+    onClose();
+  };
+  
+  // Posición fija para el diálogo
+  const dialogPosition = anchorEl ? {
+    left: anchorEl.getBoundingClientRect().left + (anchorEl.offsetWidth / 2) - 175,
+    top: anchorEl.getBoundingClientRect().top - 220 // Más cerca del botón
+  } : { left: 'auto', top: 'auto' };
+
+  return (
+    <Dialog 
+      open={open} 
+      onClose={onClose} 
+      maxWidth="xs" 
+      fullWidth={false}
+      TransitionComponent={Fade}
+      TransitionProps={{
+        timeout: 500 // 0.5 segundo para el efecto fade
+      }}
+      PaperProps={{
+        sx: {
+          width: '350px',
+          boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.15)',
+          borderRadius: '8px',
+          position: 'absolute',
+          left: dialogPosition.left,
+          top: dialogPosition.top
+        }
+      }}
+      BackdropProps={{
+        style: { backgroundColor: 'transparent' }
+      }}
+      hideBackdrop={false}
+    >
+      <DialogTitle sx={{ pb: 1 }}>
+        {title}
+      </DialogTitle>
+      <DialogContent>
+        <Box sx={{ mb: 2 }}>
+          <Typography variant="subtitle2" sx={{ mb: 1 }}>
+            Agregar importes individuales:
+          </Typography>
+          <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
+            <TextField
+              fullWidth
+              size="small"
+              label="Importe"
+              value={newAmount ? `$${formattedNewAmount}` : ''}
+              onChange={(e) => {
+                let value = e.target.value;
+                if (value.startsWith('$')) value = value.substring(1);
+                handleNewAmountChange({ target: { value } });
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  if (newAmount) {
+                    // Si hay un valor, agregar a la lista
+                    handleAddAmount();
+                  } else {
+                    // Si el campo está vacío, aplicar el total
+                    handleSave();
+                  }
+                }
+              }}
+              sx={{
+                '& .MuiOutlinedInput-input': {
+                  textAlign: 'right'
+                }
+              }}
+              InputProps={{
+                startAdornment: <InputAdornment position="start">$</InputAdornment>,
+              }}
+            />
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={handleAddAmount}
+              disabled={!newAmount}
+              startIcon={<AddIcon />}
+            >
+              Agregar
+            </Button>
+          </Box>
+        </Box>
+        
+        {amounts.length > 0 && (
+          <Box>
+            <Typography variant="subtitle2" sx={{ mb: 1 }}>
+              Importes agregados:
+            </Typography>
+            <Paper variant="outlined" sx={{ p: 1, mb: 2 }}>
+              {amounts.map((item, index) => (
+                <Box key={index} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                  <Typography>
+                    ${item.formattedAmount}
+                  </Typography>
+                  <IconButton size="small" color="error" onClick={() => handleRemoveAmount(index)}>
+                    <DeleteIcon fontSize="small" />
+                  </IconButton>
+                </Box>
+              ))}
+              <Divider sx={{ my: 1 }} />
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Typography variant="subtitle1" fontWeight="bold">
+                  Total:
+                </Typography>
+                <Typography variant="subtitle1" fontWeight="bold">
+                  ${formattedTotal}
+                </Typography>
+              </Box>
+            </Paper>
+          </Box>
+        )}
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={onClose} color="inherit">
+          Cancelar
+        </Button>
+        <Button onClick={handleSave} color="primary" variant="contained" startIcon={<CalculateIcon />}>
+          Aplicar Total
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+};
+
+/**
+ * Componente principal que gestiona el checklist de cierre
  * @returns {JSX.Element} Componente de checklist de cierre
  */
 function ClosureChecklist() {
@@ -108,11 +340,75 @@ function ClosureChecklist() {
   /** @type {React.MutableRefObject<HTMLInputElement>} Referencia al input de carga de archivo */
   const fileInputRef = useRef(null);
   
+  // Estado para el diálogo de múltiples importes
+  const [multipleAmountDialogOpen, setMultipleAmountDialogOpen] = useState(false);
+  const [currentMultipleAmountField, setCurrentMultipleAmountField] = useState('');
+  const [multipleAmountAnchorEl, setMultipleAmountAnchorEl] = useState(null);
+  const [tempAmounts, setTempAmounts] = useState([]);
+  
+  // Función para abrir el diálogo de múltiples importes
+  const handleOpenMultipleAmountDialog = (fieldName, event) => {
+    // Capturar el elemento actual antes de cualquier cambio de estado
+    const currentTarget = event.currentTarget;
+    
+    // Obtener el índice del campo en el array de items
+    const fieldIndex = items.findIndex(item => item.name === fieldName);
+    
+    // Si el campo ya tiene un valor, inicializar con ese valor
+    if (fieldIndex !== -1 && items[fieldIndex].amount) {
+      setTempAmounts([{
+        amount: items[fieldIndex].amount,
+        formattedAmount: items[fieldIndex].formattedAmount || formatARS(Math.abs(parseFloat(items[fieldIndex].amount))).replace('$', '')
+      }]);
+    } else {
+      setTempAmounts([]);
+    }
+    
+    // Primero establecer el campo y los valores, luego abrir el diálogo
+    setCurrentMultipleAmountField(fieldName);
+    
+    // Importante: establecer el anchorEl antes de abrir el diálogo
+    setMultipleAmountAnchorEl(currentTarget);
+    
+    // Usar un pequeño timeout para garantizar que el anchorEl esté establecido
+    setTimeout(() => {
+      setMultipleAmountDialogOpen(true);
+    }, 10);
+  };
+  
+  // Función para guardar el total de múltiples importes
+  const handleSaveMultipleAmounts = (total, formattedTotal) => {
+    // Encontrar el índice del campo que estamos modificando
+    const itemIndex = items.findIndex(item => item.name === currentMultipleAmountField);
+    
+    if (itemIndex !== -1) {
+      // Crear una copia del array para mantener la inmutabilidad
+      const newItems = [...items];
+      
+      // Actualizar el valor del campo específico
+      newItems[itemIndex] = {
+        ...newItems[itemIndex],
+        amount: total.toString(),
+        formattedAmount: formattedTotal
+      };
+      
+      // Actualizar el estado con el nuevo array
+      setItems(newItems);
+      
+      console.log(`Aplicado total ${total} al campo ${currentMultipleAmountField}`);
+    } else {
+      console.warn(`No se encontró el campo '${currentMultipleAmountField}' para aplicar el total ${total}`);
+    }
+    
+    // Cerrar el diálogo después de aplicar
+    setMultipleAmountDialogOpen(false);
+  };
+  
   /**
    * @description Determina el turno según la hora actual
    * @returns {string} El turno correspondiente (Mañana, Tarde o Noche)
    */
-  const determinarTurno = () => {
+  const detectarTurno = () => {
     const horaActual = new Date().getHours();
     
     if (horaActual >= 8 && horaActual < 15) {
@@ -126,7 +422,7 @@ function ClosureChecklist() {
 
   // Estado para los datos de Sinergie
   const [sinergieData, setSinergieData] = useState({
-    turno: determinarTurno(),
+    turno: detectarTurno(),
     fecha: new Date().toISOString().split('T')[0], // Formato YYYY-MM-DD para input date
     hora: new Date().toTimeString().substring(0, 5), // Formato HH:MM
     cajero: ''
@@ -793,7 +1089,7 @@ function ClosureChecklist() {
   /**
    * @description Renderiza la planilla de papel con los datos cargados
    * @returns {JSX.Element} Componente de planilla de papel
-   */
+ */
 
 
   const renderPlanilla = () => {
@@ -1201,45 +1497,132 @@ function ClosureChecklist() {
                           )}
                         </Grid>
                         <Grid item xs={5} sm={4}>
-                          <TextField
-                            fullWidth
-                            variant="outlined"
-                            size="small"
-                            type="text"
-                            value={item.amount ? `${parseFloat(item.amount) < 0 ? '-$' : '$'}${item.formattedAmount || formatARS(Math.abs(parseFloat(item.amount)))}` : ''}
-                            onChange={(e) => {
-                              // Remover el símbolo $ si existe antes de procesar
-                              let value = e.target.value;
-                              if (value.startsWith('$')) value = value.substring(1);
-                              if (value.startsWith('-$')) value = value.substring(2);
-                              handleFormattedChange({ target: { value } }, realIndex);
-                            }}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') {
-                                e.preventDefault();
-                                const nextIndex = index + 1;
-                                if (nextIndex < items.length) {
-                                  const nextInput = inputRefs.current[nextIndex];
-                                  if (nextInput) {
-                                    nextInput.focus();
+                          {item.name === 'Notas de crédito' ? (
+                            <Box>
+                              <TextField
+                                fullWidth
+                                variant="outlined"
+                                size="small"
+                                type="text"
+                                value={item.amount ? `${parseFloat(item.amount) < 0 ? '-$' : '$'}${item.formattedAmount || formatARS(Math.abs(parseFloat(item.amount)))}` : ''}
+                                onChange={(e) => {
+                                  let value = e.target.value;
+                                  if (value.startsWith('$')) value = value.substring(1);
+                                  if (value.startsWith('-$')) value = value.substring(2);
+                                  handleFormattedChange({ target: { value } }, realIndex);
+                                }}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    e.preventDefault();
+                                    const nextIndex = index + 1;
+                                    if (nextIndex < items.length) {
+                                      const nextInput = inputRefs.current[nextIndex];
+                                      if (nextInput) nextInput.focus();
+                                    }
+                                  }
+                                }}
+                                inputRef={el => inputRefs.current[realIndex] = el}
+                                inputProps={{
+                                  inputMode: 'decimal',
+                                  style: {
+                                    textAlign: 'right',
+                                    paddingRight: '12px'
+                                  },
+                                }}
+                                InputProps={{
+                                  endAdornment: (
+                                    <InputAdornment position="end" sx={{ margin: 0, height: '100%' }}>
+                                      <Tooltip title="Sumar múltiples importes">
+                                        <Button
+                                          variant="outlined"
+                                          color="primary"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleOpenMultipleAmountDialog(item.name, e);
+                                          }}
+                                          sx={{
+                                            minWidth: '40px',
+                                            width: '40px',
+                                            height: '40px',
+                                            margin: 0,
+                                            padding: 0,
+                                            borderTopLeftRadius: 0,
+                                            borderBottomLeftRadius: 0,
+                                            marginLeft: '-1px',
+                                            '&:hover': {
+                                              borderColor: 'primary.main',
+                                              zIndex: 1
+                                            }
+                                          }}
+                                        >
+                                          <CalculateIcon />
+                                        </Button>
+                                      </Tooltip>
+                                    </InputAdornment>
+                                  ),
+                                  sx: {
+                                    padding: 0,
+                                    '& .MuiOutlinedInput-notchedOutline': {
+                                      borderRight: 'none',
+                                      borderTopRightRadius: '4px',
+                                      borderBottomRightRadius: '4px'
+                                    },
+                                    '&:hover .MuiOutlinedInput-notchedOutline': {
+                                      borderColor: 'primary.main',
+                                      borderTopRightRadius: '4px',
+                                      borderBottomRightRadius: '4px'
+                                    },
+                                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                      borderColor: 'primary.main',
+                                      borderRight: 'none',
+                                      borderTopRightRadius: '4px',
+                                      borderBottomRightRadius: '4px'
+                                    }
+                                  }
+                                }}
+                              />
+                            </Box>
+                          ) : (
+                            <TextField
+                              fullWidth
+                              variant="outlined"
+                              size="small"
+                              type="text"
+                              value={item.amount ? `${parseFloat(item.amount) < 0 ? '-$' : '$'}${item.formattedAmount || formatARS(Math.abs(parseFloat(item.amount)))}` : ''}
+                              onChange={(e) => {
+                                // Remover el símbolo $ si existe antes de procesar
+                                let value = e.target.value;
+                                if (value.startsWith('$')) value = value.substring(1);
+                                if (value.startsWith('-$')) value = value.substring(2);
+                                handleFormattedChange({ target: { value } }, realIndex);
+                              }}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  e.preventDefault();
+                                  const nextIndex = index + 1;
+                                  if (nextIndex < items.length) {
+                                    const nextInput = inputRefs.current[nextIndex];
+                                    if (nextInput) {
+                                      nextInput.focus();
+                                    }
                                   }
                                 }
-                              }
-                            }}
-                            inputRef={el => inputRefs.current[realIndex] = el}
-                            sx={{
-                              '& .MuiInputBase-root': {
-                                height: '40px'
-                              },
-                              '& .MuiOutlinedInput-input': {
-                                textAlign: 'right',
-                                padding: '8px 12px'
-                              }
-                            }}
-                            inputProps={{
-                              inputMode: 'decimal'
-                            }}
-                          />
+                              }}
+                              inputRef={el => inputRefs.current[realIndex] = el}
+                              sx={{
+                                '& .MuiInputBase-root': {
+                                  height: '40px'
+                                },
+                                '& .MuiOutlinedInput-input': {
+                                  textAlign: 'right',
+                                  padding: '8px 12px'
+                                }
+                              }}
+                              inputProps={{
+                                inputMode: 'decimal'
+                              }}
+                            />
+                          )}
                         </Grid>
                       </Fragment>
                     );
@@ -1286,45 +1669,121 @@ function ClosureChecklist() {
                           <Typography variant="body1">{item.name}</Typography>
                         </Grid>
                         <Grid item xs={5} sm={4}>
-                          <TextField
-                            fullWidth
-                            variant="outlined"
-                            size="small"
-                            type="text"
-                            value={item.amount ? `${parseFloat(item.amount) < 0 ? '-$' : '$'}${item.formattedAmount || formatARS(Math.abs(parseFloat(item.amount)))}` : ''}
-                            onChange={(e) => {
-                              // Remover el símbolo $ si existe antes de procesar
-                              let value = e.target.value;
-                              if (value.startsWith('$')) value = value.substring(1);
-                              if (value.startsWith('-$')) value = value.substring(2);
-                              handleFormattedChange({ target: { value } }, realIndex);
-                            }}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') {
-                                e.preventDefault();
-                                const nextIndex = index + 1;
-                                if (nextIndex < items.length) {
-                                  const nextInput = inputRefs.current[nextIndex];
-                                  if (nextInput) {
-                                    nextInput.focus();
+                          {item.name === 'Notas de crédito' ? (
+                            <Box>
+                              <TextField
+                                fullWidth
+                                variant="outlined"
+                                size="small"
+                                type="text"
+                                value={item.amount ? `${parseFloat(item.amount) < 0 ? '-$' : '$'}${item.formattedAmount || formatARS(Math.abs(parseFloat(item.amount)))}` : ''}
+                                onChange={(e) => {
+                                  // Remover el símbolo $ si existe antes de procesar
+                                  let value = e.target.value;
+                                  if (value.startsWith('$')) value = value.substring(1);
+                                  if (value.startsWith('-$')) value = value.substring(2);
+                                  handleFormattedChange({ target: { value } }, realIndex);
+                                }}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    e.preventDefault();
+                                    const nextIndex = index + 1;
+                                    if (nextIndex < items.length) {
+                                      const nextInput = inputRefs.current[nextIndex];
+                                      if (nextInput) {
+                                        nextInput.focus();
+                                      }
+                                    }
+                                  }
+                                }}
+                                inputRef={el => inputRefs.current[realIndex] = el}
+                                sx={{
+                                  height: '40px', // Ensure consistent height
+                                  '& .MuiOutlinedInput-root': {
+                                    height: '100%',
+                                    borderTopRightRadius: 0,
+                                    borderBottomRightRadius: 0,
+                                    // Ajuste de altura de 1px si es necesario, ej: paddingTop: '1px'
+                                  },
+                                  '& .MuiOutlinedInput-input': {
+                                    textAlign: 'right',
+                                    padding: '8px 12px',
+                                  },
+                                  '&:hover .MuiOutlinedInput-notchedOutline': {
+                                    borderColor: 'primary.main', // Mantener hover
+                                  },
+                                }}
+                                inputProps={{
+                                  inputMode: 'decimal'
+                                }}
+                              />
+                              <Tooltip title="Sumar múltiples importes">
+                                <Button
+                                  variant="outlined"
+                                  color="primary"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleOpenMultipleAmountDialog(item.name, e);
+                                  }}
+                                  sx={{
+                                    height: '40px', // Ensure consistent height
+                                    minWidth: '40px',
+                                    p: 0,
+                                    borderTopLeftRadius: 0,
+                                    borderBottomLeftRadius: 0,
+                                    marginLeft: '-1px', // Para que el borde se solape y parezca unido
+                                    // Ajuste de altura de 1px si es necesario, ej: pt: '1px'
+                                    '&:hover': {
+                                      borderColor: 'primary.main', // Mantener hover
+                                      zIndex: 1 // Para que el hover del botón se vea sobre el textfield
+                                    }
+                                  }}
+                                >
+                                  <CalculateIcon />
+                                </Button>
+                              </Tooltip>
+                            </Box>
+                          ) : (
+                            <TextField
+                              fullWidth
+                              variant="outlined"
+                              size="small"
+                              type="text"
+                              value={item.amount ? `${parseFloat(item.amount) < 0 ? '-$' : '$'}${item.formattedAmount || formatARS(Math.abs(parseFloat(item.amount)))}` : ''}
+                              onChange={(e) => {
+                                // Remover el símbolo $ si existe antes de procesar
+                                let value = e.target.value;
+                                if (value.startsWith('$')) value = value.substring(1);
+                                if (value.startsWith('-$')) value = value.substring(2);
+                                handleFormattedChange({ target: { value } }, realIndex);
+                              }}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  e.preventDefault();
+                                  const nextIndex = index + 1;
+                                  if (nextIndex < items.length) {
+                                    const nextInput = inputRefs.current[nextIndex];
+                                    if (nextInput) {
+                                      nextInput.focus();
+                                    }
                                   }
                                 }
-                              }
-                            }}
-                            inputRef={el => inputRefs.current[realIndex] = el}
-                            sx={{
-                              '& .MuiInputBase-root': {
-                                height: '40px'
-                              },
-                              '& .MuiOutlinedInput-input': {
-                                textAlign: 'right',
-                                padding: '8px 12px'
-                              }
-                            }}
-                            inputProps={{
-                              inputMode: 'decimal'
-                            }}
-                          />
+                              }}
+                              inputRef={el => inputRefs.current[realIndex] = el}
+                              sx={{
+                                '& .MuiInputBase-root': {
+                                  height: '40px'
+                                },
+                                '& .MuiOutlinedInput-input': {
+                                  textAlign: 'right',
+                                  padding: '8px 12px'
+                                }
+                              }}
+                              inputProps={{
+                                inputMode: 'decimal'
+                              }}
+                            />
+                          )}
                         </Grid>
                       </Fragment>
                     );
@@ -1525,6 +1984,24 @@ function ClosureChecklist() {
 
       
 
+          {/* Diálogo de múltiples importes */}
+      <MultipleAmountDialog
+        open={multipleAmountDialogOpen}
+        onClose={() => {
+          // Primero cerrar el diálogo
+          setMultipleAmountDialogOpen(false);
+          
+          // Usar un timeout para limpiar el anchorEl después de completar la animación
+          setTimeout(() => {
+            setMultipleAmountAnchorEl(null);
+          }, 1000);
+        }}
+        title={`Importes para ${currentMultipleAmountField}`}
+        amounts={tempAmounts}
+        setAmounts={setTempAmounts}
+        onSave={handleSaveMultipleAmounts}
+        anchorEl={multipleAmountAnchorEl}
+      />
     </Box>
   );
 }
