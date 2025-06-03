@@ -62,6 +62,7 @@ const predefinedItems = [
   'Depo Final',
   'Retiro',
   'Ajuste',
+  'Gastos',
   'Notas de crédito',
   'Facturas manuales',
   'Extra Cash Posnet (Visa Electron + MasterCard)',
@@ -685,7 +686,7 @@ function ClosureChecklist() {
       .filter(item => [
         'Deposito 1', 'Deposito 2', 'Deposito 3', 'Deposito 4', 'Depo Final',
         'Extra Cash Mercado Pago', 'Extra Cash Posnet (Visa Electron + MasterCard)', 
-        'Retiro', 'Ajuste'
+        'Retiro', 'Ajuste', 'Gastos'
       ].includes(item.name))
       .reduce((acc, item) => {
         if (item.amount) {
@@ -1526,7 +1527,7 @@ function ClosureChecklist() {
                 <Grid container spacing={2} sx={{ maxWidth: '100%' }}>
                   {items.filter(item => [
                     'Deposito 1', 'Deposito 2', 'Deposito 3', 'Deposito 4', 'Depo Final', 
-                    'Retiro', 'Ajuste', 'Notas de crédito', 'Facturas manuales', 
+                    'Retiro', 'Ajuste', 'Gastos', 'Notas de crédito', 'Facturas manuales', 
                     'Extra Cash Posnet (Visa Electron + MasterCard)', 'Extra Cash Mercado Pago'
                   ].includes(item.name)).map((item, index) => {
                     // Recalcular el índice real en el array original
@@ -1538,6 +1539,18 @@ function ClosureChecklist() {
                             {item.name}
                             {item.name === 'Rappi' && (
                               <Tooltip title="Copiar antes de hacer el cierre X de Sinergie, ya que una vez hecho, el importe Rappi ya no se ve por separado, y pasa a sumarse con las Tarjetas.">
+                                <WarningIcon 
+                                  color="warning" 
+                                  sx={{ 
+                                    fontSize: '1rem', 
+                                    ml: 1,
+                                    verticalAlign: 'middle'
+                                  }} 
+                                />
+                              </Tooltip>
+                            )}
+                            {item.name === 'Gastos' && (
+                              <Tooltip title="Para cargar gastos de librería, mantenimiento, limpieza y otros autorizados por la empresa">
                                 <WarningIcon 
                                   color="warning" 
                                   sx={{ 
@@ -1571,7 +1584,7 @@ function ClosureChecklist() {
                           )}
                         </Grid>
                         <Grid item xs={5} sm={4}>
-                          {['Notas de crédito', 'Facturas manuales', 'Extra Cash Posnet (Visa Electron + MasterCard)', 'Extra Cash Mercado Pago'].includes(item.name) ? (
+                          {['Notas de crédito', 'Facturas manuales', 'Extra Cash Posnet (Visa Electron + MasterCard)', 'Extra Cash Mercado Pago', 'Gastos'].includes(item.name) ? (
                             <Box>
                               <TextField
                                 fullWidth
@@ -1754,10 +1767,22 @@ function ClosureChecklist() {
                                 />
                               </Tooltip>
                             )}
+                            {item.name === 'Gastos' && (
+                              <Tooltip title="Para cargar gastos de librería, mantenimiento, limpieza y otros autorizados por la empresa">
+                                <WarningIcon 
+                                  color="warning" 
+                                  sx={{ 
+                                    fontSize: '1rem', 
+                                    ml: 1,
+                                    verticalAlign: 'middle'
+                                  }} 
+                                />
+                              </Tooltip>
+                            )}
                           </Typography>
                         </Grid>
                         <Grid item xs={5} sm={4}>
-                          {['Notas de crédito', 'Facturas manuales', 'Extra Cash Posnet (Visa Electron + MasterCard)', 'Extra Cash Mercado Pago'].includes(item.name) ? (
+                          {['Notas de crédito', 'Facturas manuales', 'Extra Cash Posnet (Visa Electron + MasterCard)', 'Extra Cash Mercado Pago', 'Gastos'].includes(item.name) ? (
                             <Box>
                               <TextField
                                 fullWidth
@@ -2080,9 +2105,20 @@ function ClosureChecklist() {
                           );
                         })}
                         
-                        {/* Ajuste (como Gasto) */}
+                        {/* Gastos */}
                         <TableRow>
                           <TableCell>Gasto</TableCell>
+                          <TableCell align="right">
+                            {items.find(i => i.name === 'Gastos')?.amount 
+                              ? formatARS(items.find(i => i.name === 'Gastos')?.amount) 
+                              : ''}
+                          </TableCell>
+                          <TableCell></TableCell>
+                        </TableRow>
+                        
+                        {/* Ajuste negativo (como Gasto adicional si es necesario) */}
+                        <TableRow>
+                          <TableCell>Ajuste (egreso)</TableCell>
                           <TableCell align="right">
                             {items.find(i => i.name === 'Ajuste' && parseFloat(i.amount) < 0)?.amount 
                               ? formatARS(Math.abs(parseFloat(items.find(i => i.name === 'Ajuste')?.amount || 0))) 
@@ -2145,8 +2181,12 @@ function ClosureChecklist() {
                           <TableCell></TableCell>
                         </TableRow>
                         <TableRow>
-                          <TableCell>Pago QR MODO</TableCell>
-                          <TableCell align="right"></TableCell>
+                          <TableCell>Rappi</TableCell>
+                          <TableCell align="right">
+                            {items.find(i => i.name === 'Rappi')?.amount 
+                              ? formatARS(items.find(i => i.name === 'Rappi')?.amount) 
+                              : ''}
+                          </TableCell>
                           <TableCell></TableCell>
                         </TableRow>
                         
