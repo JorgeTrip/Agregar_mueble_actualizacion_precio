@@ -377,6 +377,11 @@ function ClosureChecklist() {
   };
   
   // Función para guardar el total de múltiples importes
+  /**
+   * Guarda el total de múltiples importes en el campo correspondiente
+   * @param {number} total - Valor numérico total
+   * @param {string} formattedTotal - Valor formateado para mostrar
+   */
   const handleSaveMultipleAmounts = (total, formattedTotal) => {
     // Encontrar el índice del campo que estamos modificando
     const itemIndex = items.findIndex(item => item.name === currentMultipleAmountField);
@@ -1497,7 +1502,7 @@ function ClosureChecklist() {
                           )}
                         </Grid>
                         <Grid item xs={5} sm={4}>
-                          {item.name === 'Notas de crédito' ? (
+                          {['Notas de crédito', 'Facturas manuales', 'Extra Cash Posnet', 'Extra Cash Mercado Pago'].includes(item.name) ? (
                             <Box>
                               <TextField
                                 fullWidth
@@ -1532,7 +1537,7 @@ function ClosureChecklist() {
                                 InputProps={{
                                   endAdornment: (
                                     <InputAdornment position="end" sx={{ margin: 0, height: '100%' }}>
-                                      <Tooltip title="Sumar múltiples importes">
+                                      <Tooltip title={`Sumar múltiples importes para ${item.name}`}>
                                         <Button
                                           variant="outlined"
                                           color="primary"
@@ -1669,7 +1674,7 @@ function ClosureChecklist() {
                           <Typography variant="body1">{item.name}</Typography>
                         </Grid>
                         <Grid item xs={5} sm={4}>
-                          {item.name === 'Notas de crédito' ? (
+                          {['Notas de crédito', 'Facturas manuales', 'Extra Cash Posnet', 'Extra Cash Mercado Pago'].includes(item.name) ? (
                             <Box>
                               <TextField
                                 fullWidth
@@ -1717,7 +1722,7 @@ function ClosureChecklist() {
                                   inputMode: 'decimal'
                                 }}
                               />
-                              <Tooltip title="Sumar múltiples importes">
+                              <Tooltip title={`Sumar múltiples importes para ${item.name}`}>
                                 <Button
                                   variant="outlined"
                                   color="primary"
