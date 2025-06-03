@@ -1411,7 +1411,7 @@ function ClosureChecklist() {
       width: '100%', 
       maxWidth: '100%',
       boxSizing: 'border-box',
-      mx: '-30px',
+      mx: { xs: 0, md: -3.5 },
       '& .MuiFormControl-root': { mt: 1 },
       '& .MuiPaper-root': {
         width: '100%',
