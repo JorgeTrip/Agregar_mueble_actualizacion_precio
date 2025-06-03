@@ -1383,6 +1383,15 @@ function ClosureChecklist() {
           </Button>
           <Button 
             fullWidth
+            variant="outlined" 
+            onClick={() => setActiveTab(1)}
+            // Podrías agregar un ícono si lo deseas, ej: endIcon={<ArrowForwardIcon />}
+            sx={{ mb: { xs: 1, sm: 0 } }}
+          >
+            Ver planilla cierre ➡️
+          </Button>
+          <Button 
+            fullWidth
             variant="contained" 
             color="primary" 
             onClick={handleSaveToFile}
@@ -1911,7 +1920,7 @@ function ClosureChecklist() {
               <Button 
                 fullWidth
                 variant="outlined" 
-                color="primary"
+                color="error"
                 onClick={handleResetForm}
                 sx={{ mb: { xs: 1, sm: 0 } }}
               >
@@ -1936,6 +1945,15 @@ function ClosureChecklist() {
                 startIcon={<UploadIcon />}
               >
                 Cargar Planilla
+              </Button>
+              <Button 
+                fullWidth
+                variant="outlined" 
+                color="info"
+                onClick={() => setActiveTab(1)}
+                sx={{ mb: { xs: 1, sm: 0 } }}
+              >
+                Ver planilla cierre ➡️
               </Button>
               <input
                 type="file"
