@@ -2272,6 +2272,37 @@ function ClosureChecklist() {
                     </Table>
                   </TableContainer>
                 </Box>
+
+                {/* Sección de TOTAL DEL TURNO */}
+                <Box sx={{ mb: 2, border: '1px solid #9e9e9e', borderRadius: '12px', overflow: 'hidden' }}>
+                  <TableContainer>
+                    <Table size="small" sx={{ 
+                      '& td, & th': { 
+                        border: '1px solid #9e9e9e', 
+                        p: 0.5, 
+                        fontSize: '0.9rem', 
+                        color: 'rgba(0, 0, 0, 0.87) !important'
+                      } 
+                    }}>
+                      <TableBody>
+                        <TableRow sx={{ backgroundColor: '#d0d0d0' }}>
+                          <TableCell width="40%" sx={{ fontWeight: 'bold' }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                              TOTAL DEL TURNO
+                              <Tooltip title="Este total debe coincidir con el cierre X.">
+                                <WarningIcon sx={{ ml: 1, fontSize: '1.2rem', color: 'orange' }} />
+                              </Tooltip>
+                            </Box>
+                          </TableCell>
+                          <TableCell width="30%" align="right" sx={{ fontWeight: 'bold' }}>
+                            {formatARS(calcularTotalEfectivo() + calcularTotalElectronico())}
+                          </TableCell>
+                          <TableCell width="30%" />
+                        </TableRow>
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                </Box>
               </Box>
             </ThemeProvider>
             </Box>
