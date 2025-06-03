@@ -1411,17 +1411,12 @@ function ClosureChecklist() {
       width: '100%', 
       maxWidth: '100%',
       boxSizing: 'border-box',
-      mx: 'auto',
-      overflowX: 'hidden',
+      mx: '-30px',
       '& .MuiFormControl-root': { mt: 1 },
       '& .MuiPaper-root': {
         width: '100%',
         maxWidth: '100%',
-        boxSizing: 'border-box',
-        '&.MuiPaper-root': {
-          width: '100%',
-          maxWidth: '100%'
-        }
+        boxSizing: 'border-box'
       },
       '& .MuiGrid-item': {
         width: '100%',
@@ -1437,7 +1432,7 @@ function ClosureChecklist() {
         Planilla de Corte de Caja
       </Typography>
       
-      <AppBar position="static" color="default" sx={{ mb: 3, borderRadius: 1, overflow: 'hidden' }}>
+      <AppBar position="static" color="default" sx={{ mb: 3, borderRadius: 1, overflow: 'hidden', pr: 1 }}>
         <Tabs
           value={activeTab}
           onChange={handleTabChange}
@@ -1546,27 +1541,28 @@ function ClosureChecklist() {
               
               {/* Caja 1: Cargar desde comprobantes */}
               <Box 
-                sx={{ 
+                sx={theme => ({ 
                   position: 'relative',
-                  border: '1px solid rgba(255, 255, 255, 0.5)', 
+                  border: `2px solid ${theme.palette.divider}`, 
                   borderRadius: 2, 
                   p: 2, 
                   pt: 3,
                   mb: 3, 
                   mt: 3
-                }}
+                })}
               >
                 <Typography 
                   variant="subtitle1" 
-                  sx={{ 
+                  sx={theme => ({ 
                     position: 'absolute',
                     top: '-12px',
                     left: '12px',
                     px: 1,
                     fontWeight: 'bold',
-                    backgroundColor: '#121212', // Fondo que coincide con el tema oscuro
+                    backgroundColor: theme.palette.background.paper, 
+                    color: theme.palette.text.primary,
                     zIndex: 1
-                  }}
+                  })}
                 >
                   Cargar desde comprobantes
                 </Typography>
@@ -1746,27 +1742,28 @@ function ClosureChecklist() {
               
               {/* Caja 2: Copiar desde Sinergie */}
               <Box 
-                sx={{ 
+                sx={theme => ({ 
                   position: 'relative',
-                  border: '1px solid rgba(255, 255, 255, 0.5)', 
+                  border: `2px solid ${theme.palette.divider}`, 
                   borderRadius: 2, 
                   p: 2, 
                   pt: 3,
                   mb: 3,
                   mt: 3
-                }}
+                })}
               >
                 <Typography 
                   variant="subtitle1" 
-                  sx={{ 
+                  sx={theme => ({ 
                     position: 'absolute',
                     top: '-12px',
                     left: '12px',
                     px: 1,
                     fontWeight: 'bold',
-                    backgroundColor: '#121212', // Fondo que coincide con el tema oscuro
+                    backgroundColor: theme.palette.background.paper, 
+                    color: theme.palette.text.primary,
                     zIndex: 1
-                  }}
+                  })}
                 >
                   Copiar desde Sinergie
                 </Typography>
